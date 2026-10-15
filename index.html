@@ -147,27 +147,43 @@
       return originalMeasureText.call(this, translate(text));
     };
 
-    // 5. 攔截 DOM 文字變化 (彈窗、設定選單、強化列表)
+    // 5. 攔截 DOM 文字變化 (應用到升級卡片、設定選單、彈窗等)
     window.addEventListener('DOMContentLoaded', () => {
       const observer = new MutationObserver(mutations => {
         mutations.forEach(m => {
           if (m.type === 'characterData') {
-            if (zhDict[m.target.nodeValue]) m.target.nodeValue = zhDict[m.target.nodeValue];
+            let originalText = m.target.nodeValue;
+            if (originalText && originalText.trim()) {
+              let translated = translate(originalText.trim());
+              if (translated !== originalText.trim()) m.target.nodeValue = translated;
+            }
           } else if (m.type === 'childList') {
             m.addedNodes.forEach(node => {
-              if (node.nodeType === 3 && zhDict[node.nodeValue]) {
-                node.nodeValue = zhDict[node.nodeValue];
-              } else if (node.nodeType === 1 && !node.closest('script, style')) {
+              if (node.nodeType === 3) { // 純文字節點
+                let originalText = node.nodeValue;
+                if (originalText && originalText.trim()) {
+                  let translated = translate(originalText.trim());
+                  if (translated !== originalText.trim()) node.nodeValue = translated;
+                }
+              } else if (node.nodeType === 1 && !node.closest('script, style')) { // HTML 標籤
                 const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
                 let n;
                 while (n = walker.nextNode()) {
-                  if (zhDict[n.nodeValue]) n.nodeValue = zhDict[n.nodeValue];
+                  let originalText = n.nodeValue;
+                  if (originalText && originalText.trim()) {
+                    let translated = translate(originalText.trim());
+                    // 替換翻譯後的文字
+                    if (translated !== originalText.trim()) {
+                      n.nodeValue = translated;
+                    }
+                  }
                 }
               }
             });
           }
         });
       });
+      // 監聽整個網頁的動態變化
       observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     });
   }
