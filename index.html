@@ -45,52 +45,83 @@
       firebase.initializeApp(myFirebaseConfig);
     }
 
-    // 騙過遊戲引擎，阻止它自動洗成英文
-    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
+    <!-- 語言判定與繁中動態翻譯字典 -->
+<script>
+  // 1. 讀取玩家在設定中選擇的語言，預設為繁體中文 'zh'
+  let savedLang = localStorage.getItem('ps.lang');
+  if (!savedLang) {
+    savedLang = 'zh';
+    try { localStorage.setItem('ps.lang', 'zh'); } catch(e){}
+  }
+
+  if (savedLang === 'en') {
+    // 若玩家切換為英文，讓遊戲原生引擎接管
+    document.documentElement.lang = 'en';
+  } else {
+    // 若為中文，先設定為 'es' 騙過引擎不自動轉英文
     document.documentElement.lang = 'es';
 
-    // 攔截並動態替換招式、屬性與按鈕文字為繁中
-    const dict = {
-      "Acero": "鋼", "Agua": "水", "Bicho": "蟲", "Dragón": "龍", "Eléctrico": "電", "Fantasma": "幽靈", 
-      "Fuego": "火", "Hada": "妖精", "Hielo": "冰", "Lucha": "格鬥", "Planta": "草", "Psíquico": "超能力", 
-      "Roca": "岩石", "Siniestro": "惡", "Tierra": "地面", "Veneno": "毒", "Volador": "飛行", 
-      "Lanzallamas": "噴射火焰", "Onda Ígnea": "熱風", "Llamarada": "大字爆炎", "Hidrobomba": "水炮", 
-      "Rayo": "十萬伏特", "Trueno": "打雷", "Terremoto": "地震", "Ataque Ala": "翅膀攻擊", 
-      "Bola Sombra": "暗影球", "A Bocajarro": "近身戰", "Hoja Afilada": "飛葉快刀", "Gigadrenado": "終極吸取",
-      "Vigor": "活力 (HP)", "Potencia": "力量 (攻擊)", "Carrera": "衝刺 (速度)", "Reflejos": "反射 (冷卻)", 
-      "Coraza": "裝甲 (減傷)", "Síntesis": "光合作用 (回血)", "Imán": "磁鐵 (拾取範圍)", "Aprendizaje": "學習 (經驗加成)",
-      "¡Nivel {x}!": "等級 {x}！", "Elige una recompensa ·": "選擇一項升級獎勵 ·", "Elige tu carta": "選擇卡片"
+    // 2. 繁體中文翻譯字典（攔截遊戲底層動態生成的西文）
+    const zhDict = {
+      "Acero":"鋼", "Agua":"水", "Bicho":"蟲", "Dragón":"龍", "Eléctrico":"電", 
+      "Fantasma":"幽靈", "Fuego":"火", "Hada":"妖精", "Hielo":"冰", "Lucha":"格鬥", 
+      "Planta":"草", "Psíquico":"超能力", "Roca":"岩石", "Siniestro":"惡", "Tierra":"地面", 
+      "Veneno":"毒", "Volador":"飛行",
+      "Vigor":"活力 (HP)", "Potencia":"力量 (攻擊)", "Carrera":"衝刺 (速度)", 
+      "Reflejos":"反射 (冷卻)", "Coraza":"裝甲 (減傷)", "Síntesis":"光合作用 (回血)", 
+      "Imán":"磁鐵 (拾取)", "Aprendizaje":"學習 (經驗)",
+      "Ataque":"攻擊", "Vida":"生命", "Velocidad":"速度", "Nv.":"等級", "Nivel":"等級",
+      "¡Un objeto!":"獲得攜帶道具！", "¡Vínculo!":"招式牽絆融合！", "Pausa":"遊戲暫停", 
+      "Continuar":"繼續遊戲", "Abandonar run":"放棄本局", "Volver al menú":"返回主選單",
+      "Misiones":"任務", "Logros":"成就", "Perfil":"個人檔案", "Diarias":"每日任務", 
+      "Semanales":"每週任務", "Recoger":"領取", "Equipar":"裝備", "Volver":"返回",
+      "Lanzallamas":"噴射火焰", "Rayo":"十萬伏特", "Terremoto":"地震", "Hidrobomba":"水炮"
     };
 
+    const translate = (text) => {
+      if (typeof text !== 'string') return text;
+      if (zhDict[text]) return zhDict[text];
+      // 動態替換等級文字
+      const lvlMatch = text.match(/^¡Nivel (\d+)!$/);
+      if (lvlMatch) return `等級提升！ Lv.${lvlMatch[1]}`;
+      return text;
+    };
+
+    // 3. 攔截 Canvas 繪製 (局內升級、傷害數字、招式名稱)
     const originalFillText = CanvasRenderingContext2D.prototype.fillText;
     CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-      if (typeof text === 'string' && dict[text]) text = dict[text];
-      return originalFillText.call(this, text, x, y, maxWidth);
+      return originalFillText.call(this, translate(text), x, y, maxWidth);
+    };
+    const originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+    CanvasRenderingContext2D.prototype.measureText = function(text) {
+      return originalMeasureText.call(this, translate(text));
     };
 
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(m => {
-        if (m.type === 'characterData') {
-          let t = m.target.nodeValue;
-          if (dict[t]) m.target.nodeValue = dict[t];
-        } else if (m.type === 'childList') {
-          m.addedNodes.forEach(node => {
-            if (node.nodeType === 3 && dict[node.nodeValue]) node.nodeValue = dict[node.nodeValue];
-            else if (node.nodeType === 1) {
-              const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-              let n;
-              while (n = walker.nextNode()) {
-                if (dict[n.nodeValue]) n.nodeValue = dict[n.nodeValue];
-              }
-            }
-          });
-        }
-      });
-    });
+    // 4. 攔截 DOM 文字變化 (彈窗、設定選單、強化列表)
     window.addEventListener('DOMContentLoaded', () => {
+      const observer = new MutationObserver(mutations => {
+        mutations.forEach(m => {
+          if (m.type === 'characterData') {
+            if (zhDict[m.target.nodeValue]) m.target.nodeValue = zhDict[m.target.nodeValue];
+          } else if (m.type === 'childList') {
+            m.addedNodes.forEach(node => {
+              if (node.nodeType === 3 && zhDict[node.nodeValue]) {
+                node.nodeValue = zhDict[node.nodeValue];
+              } else if (node.nodeType === 1 && !node.closest('script, style')) {
+                const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+                let n;
+                while (n = walker.nextNode()) {
+                  if (zhDict[n.nodeValue]) n.nodeValue = zhDict[n.nodeValue];
+                }
+              }
+            });
+          }
+        });
+      });
       observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     });
-  </script>
+  }
+</script>
 
   <meta name="description" content="Survive hordes of Pokémon with your partner in this free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and online co-op with friends. No downloads, no ads.">
   <link rel="canonical" href="https://pokesurvivor.com/en/">
