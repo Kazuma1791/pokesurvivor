@@ -12,13 +12,13 @@
 // SIN Identity Platform, así las cuentas son gratis sin límite. ¡No pulsar nunca
 // "Actualizar a Identity Platform" en su consola! (El viejo era pokesurvivor-jpter.)
 G.FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw',
-  authDomain: 'pokesurvivor-free.firebaseapp.com',
-  projectId: 'pokesurvivor-free',
-  storageBucket: 'pokesurvivor-free.firebasestorage.app',
-  messagingSenderId: '798271504277',
-  appId: '1:798271504277:web:dcac4409f969239e87009c',
-  databaseURL: 'https://pokesurvivor-free-default-rtdb.europe-west1.firebasedatabase.app'
+  apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
+  authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
+  databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "pokemonsurvivor-e89a5",
+  storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
+  messagingSenderId: "693180646327",
+  appId: "1:693180646327:web:f706004dea2a00124dde32"
 };
 
 /* Ejemplo de cómo debe quedar:
