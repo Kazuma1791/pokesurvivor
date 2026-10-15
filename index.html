@@ -61,30 +61,79 @@
     // 若為中文，先設定為 'es' 騙過引擎不自動轉英文
     document.documentElement.lang = 'es';
 
-    // 2. 繁體中文翻譯字典（攔截遊戲底層動態生成的西文）
+    // 2. 繁體中文翻譯字典（擴充版）
     const zhDict = {
       "Acero":"鋼", "Agua":"水", "Bicho":"蟲", "Dragón":"龍", "Eléctrico":"電", 
       "Fantasma":"幽靈", "Fuego":"火", "Hada":"妖精", "Hielo":"冰", "Lucha":"格鬥", 
       "Planta":"草", "Psíquico":"超能力", "Roca":"岩石", "Siniestro":"惡", "Tierra":"地面", 
       "Veneno":"毒", "Volador":"飛行",
+      
       "Vigor":"活力 (HP)", "Potencia":"力量 (攻擊)", "Carrera":"衝刺 (速度)", 
       "Reflejos":"反射 (冷卻)", "Coraza":"裝甲 (減傷)", "Síntesis":"光合作用 (回血)", 
       "Imán":"磁鐵 (拾取)", "Aprendizaje":"學習 (經驗)",
-      "Ataque":"攻擊", "Vida":"生命", "Velocidad":"速度", "Nv.":"等級", "Nivel":"等級",
-      "¡Un objeto!":"獲得攜帶道具！", "¡Vínculo!":"招式牽絆融合！", "Pausa":"遊戲暫停", 
-      "Continuar":"繼續遊戲", "Abandonar run":"放棄本局", "Volver al menú":"返回主選單",
+      
+      "Elige una recompensa ·": "選擇一項升級獎勵 ·",
+      "Elige tu carta": "選擇你的卡片",
+      "Mejora": "能力強化",
+      "EVOLUCIÓN": "招式進化！",
+      "Evoluciona": "招式進化",
+      "¡Un objeto!": "獲得攜帶道具！",
+      
+      "Ataque":"攻擊", "Vida":"生命", "Velocidad":"速度", "Nv.":"Lv.", "Nivel":"等級",
+      "¡Vínculo!":"招式牽絆融合！", "Pausa":"遊戲暫停", "Continuar":"繼續遊戲", 
+      "Abandonar run":"放棄本局", "Volver al menú":"返回主選單",
       "Misiones":"任務", "Logros":"成就", "Perfil":"個人檔案", "Diarias":"每日任務", 
-      "Semanales":"每週任務", "Recoger":"領取", "Equipar":"裝備", "Volver":"返回",
-      "Lanzallamas":"噴射火焰", "Rayo":"十萬伏特", "Terremoto":"地震", "Hidrobomba":"水炮"
+      "Semanales":"每週任務", "Recoger":"領取", "Equipar":"裝備", "Volver":"返回"
     };
-
+    
+    // 3. 智慧動態翻譯邏輯（自動識別並替換升級卡片的數值與詞彙）
     const translate = (text) => {
       if (typeof text !== 'string') return text;
+      
+      // 完全命中字典直接回傳
       if (zhDict[text]) return zhDict[text];
-      // 動態替換等級文字
+      
+      // 動態替換等級文字 (例如 ¡Nivel 2!)
       const lvlMatch = text.match(/^¡Nivel (\d+)!$/);
       if (lvlMatch) return `等級提升！ Lv.${lvlMatch[1]}`;
+    
+      // 動態替換「新獲得的技能」 (例如 Nuevo · Lanzallamas)
+      const newMatch = text.match(/^Nuevo · (.*)$/);
+      if (newMatch) {
+         let skillName = zhDict[newMatch[1]] || newMatch[1];
+         return `新學習 · ${skillName}`;
+      }
+    
+      // 動態替換升級數值句型 (利用正則表達式自動翻譯)
+      let replaced = text;
+      replaced = replaced.replace(/daño/g, "傷害");
+      replaced = replaced.replace(/recarga/g, "冷卻時間");
+      replaced = replaced.replace(/alcance/g, "攻擊範圍");
+      replaced = replaced.replace(/radio/g, "爆炸半徑");
+      replaced = replaced.replace(/proyectil(es)?/g, "投射物");
+      replaced = replaced.replace(/perforación/g, "穿透次數");
+      replaced = replaced.replace(/duración/g, "持續時間");
+      replaced = replaced.replace(/orbe(s)?/g, "環繞球");
+      replaced = replaced.replace(/potencia/g, "技能威力");
+      replaced = replaced.replace(/acumulación máxima/g, "最大充能次數");
+      replaced = replaced.replace(/acumulación/g, "充能次數");
+      replaced = replaced.replace(/Golpea en 360°/g, "360° 全方位攻擊");
+      replaced = replaced.replace(/más grandes/g, "體積變大");
+      replaced = replaced.replace(/ y /g, " 與 ");
+      
+      if (replaced !== text) return replaced;
+      
       return text;
+    };
+    
+    // 4. 攔截 Canvas 繪製 (局內升級卡片、傷害數字等)
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+      return originalFillText.call(this, translate(text), x, y, maxWidth);
+    };
+    const originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+    CanvasRenderingContext2D.prototype.measureText = function(text) {
+      return originalMeasureText.call(this, translate(text));
     };
 
     // 3. 攔截 Canvas 繪製 (局內升級、傷害數字、招式名稱)
