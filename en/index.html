@@ -1,14 +1,10 @@
 <!doctype html>
-<html lang="en">
-<!doctype html>
-<html lang="en">
+<html lang="zh-HK">
 <head>
   <meta charset="utf-8">
-  <!-- 注意：如果這是根目錄的 index.html，請務必刪除下面這行 <base href="../">；如果是 en/index.html 則保留 -->
-  <base href="../">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>PokéSurvivor – Free online Pokémon survival game (Survivor.io style)</title>
-
+  <title>PokéSurvivor – 寶可夢倖存者</title>
+  
   <!-- 引入 Firebase SDK (Compat 版本) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -16,6 +12,22 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <script>
+    // 綁定到遊戲核心的全域物件
+    window.G = window.G || {};
+    window.G.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
+      authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
+      databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "pokemonsurvivor-e89a5",
+      storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
+      messagingSenderId: "693180646327",
+      appId: "1:693180646327:web:f706004dea2a00124dde32"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.G.FIREBASE_CONFIG);
+    }
+  </script>
     // 綁定到遊戲核心識別的全域物件 window.G
     window.G = window.G || {};
     window.G.FIREBASE_CONFIG = {
@@ -114,40 +126,38 @@
 <div id="rotate" class="hidden"><div class="box center"><div id="rotate-ico"></div><h2>Gira el móvil</h2><p class="sub">PokéSurvivor se juega en horizontal.</p></div></div>
 
 <!-- ====== Inicio: login / registro / invitado ====== -->
+<!-- ====== 登入 / 註冊 / 訪客 ====== -->
 <section id="scr-login" class="scr hidden">
   <div class="box" style="width:min(420px,100%)">
     <div class="logo">
       <div class="t1">PokéSurvivor</div>
-      <div class="t2">Mundo Misterioso</div>
+      <div class="t2">不思議迷宮</div>
     </div>
-    <p class="login-tag">Sobrevive a las hordas con tu compañero Pokémon · gratis, en PC y móvil</p>
-    <p class="login-official">Web oficial: pokesurvivor.com · si alguien te pide pagar, no somos nosotros</p>
+    <p class="login-tag">與你的搭檔寶可夢迎戰怪潮 · 免費支援 PC 與手機</p>
     <div class="tabs">
-      <div class="tab on" data-tab="login">Entrar</div>
-      <div class="tab" data-tab="register">Crear cuenta</div>
+      <div class="tab on" data-tab="login">登入</div>
+      <div class="tab" data-tab="register">註冊帳號</div>
     </div>
     <p id="signup-closed" class="note center hidden"></p>
     <form id="login-form" autocomplete="off">
-      <label for="f-user">Nombre</label>
-      <input id="f-user" class="field" maxlength="16" spellcheck="false">
-      <label for="f-pass">Contraseña</label>
-      <input id="f-pass" class="field" type="password" maxlength="64">
+      <label for="f-user">使用者名稱</label>
+      <input id="f-user" class="field" maxlength="16" spellcheck="false" placeholder="請輸入名稱">
+      <label for="f-pass">密碼</label>
+      <input id="f-pass" class="field" type="password" maxlength="64" placeholder="請輸入密碼">
       <p id="login-err" class="err"></p>
-      <p class="note"><a href="#" id="f-forgot">¿Olvidaste tu contraseña?</a></p>
-      <p id="forgot-note" class="note hidden">Si vinculaste tu Gmail, pulsa <b>Entrar con Google</b> con ese Gmail: es tu misma cuenta.
-        Si no lo vinculaste, no se puede recuperar: crea una cuenta nueva (y esta vez vincula tu Gmail desde el aviso que sale al entrar).</p>
+      <p class="note"><a href="#" id="f-forgot">忘記密碼？</a></p>
+      <p id="forgot-note" class="note hidden">若曾綁定 Google，直接點選<b>使用 Google 登入</b>即可登入同一個帳號。未綁定則無法找回密碼，需重新註冊。</p>
       <div class="row">
-        <button id="btn-auth" class="btn gold grow" type="submit">Entrar</button>
+        <button id="btn-auth" class="btn gold grow" type="submit">登入</button>
       </div>
     </form>
     <div class="row" style="margin-top:10px">
-      <button id="btn-google" class="btn google grow hidden" type="button">Entrar con Google</button>
+      <button id="btn-google" class="btn google grow hidden" type="button">使用 Google 登入</button>
     </div>
     <div class="row" style="margin-top:10px">
-      <button id="btn-guest" class="btn ghost grow" type="button">Jugar como invitado</button>
+      <button id="btn-guest" class="btn ghost grow" type="button">以訪客身分試玩</button>
     </div>
     <p class="note center" id="login-mode"></p>
-    <p class="note center"><a href="en/guide/">Guía</a> · <a href="en/pokedex/">Pokédex</a> · <a href="#" class="legal-link" data-legal>Aviso legal y privacidad</a></p>
   </div>
 </section>
 
@@ -161,60 +171,60 @@
   </div>
 </section>
 
-<!-- ====== Resultado del test ====== -->
+<!-- ====== 性格測驗結果 ====== -->
 <section id="scr-result" class="scr dim hidden">
   <div class="box result">
-    <p class="sub">Tu personalidad es…</p>
+    <p class="sub">你的性格特質是…</p>
     <div class="trait" id="res-trait"></div>
     <p id="res-text"></p>
     <canvas id="res-stage" class="stage" width="200" height="150"></canvas>
-    <h3>Tu compañero: <span class="gold" id="res-name"></span></h3>
+    <h3>推薦夥伴：<span class="gold" id="res-name"></span></h3>
     <div class="row" style="justify-content:center;margin-top:14px">
-      <button id="res-ok" class="btn gold">¡Vamos juntos!</button>
-      <button id="res-other" class="btn">Elegir otro</button>
+      <button id="res-ok" class="btn gold">一起出發！</button>
+      <button id="res-other" class="btn">更換夥伴</button>
     </div>
   </div>
 </section>
 
-<!-- ====== Elegir compañero ====== -->
+<!-- ====== 自選初始夥伴 ====== -->
 <section id="scr-starters" class="scr dim hidden">
   <div class="box wide">
-    <h2>Elige a tu compañero</h2>
-    <p class="sub">Los iniciales de todas las regiones, y dos amigos más.</p>
+    <h2>選擇你的搭檔</h2>
+    <p class="sub">包含全世代御三家及兩位特別夥伴。</p>
     <div class="grid" id="starter-grid"></div>
     <div class="row between" style="margin-top:14px">
-      <button id="starter-back" class="btn ghost">Volver</button>
+      <button id="starter-back" class="btn ghost">返回</button>
       <span id="starter-info" class="grow" style="color:var(--muted)"></span>
-      <button id="starter-ok" class="btn gold" disabled>Elegir</button>
+      <button id="starter-ok" class="btn gold" disabled>確定選擇</button>
     </div>
   </div>
 </section>
-
-<!-- ====== Menú principal ====== -->
+  
+<!-- ====== 主選單 ====== -->
 <section id="scr-menu" class="scr hidden">
   <div class="menu-left">
     <div class="logo">
       <div class="t1">PokéSurvivor</div>
-      <div class="t2">Mundo Misterioso</div>
+      <div class="t2">不思議迷宮</div>
     </div>
     <div class="partner-card">
       <canvas id="menu-partner" class="stage" width="260" height="200"></canvas>
       <div class="nm" id="menu-partner-name"></div>
       <div class="lv" id="menu-partner-info"></div>
-      <div class="seg hidden" id="menu-shiny"><button data-v="0">Normal</button><button data-v="1"></button></div>
+      <div class="seg hidden" id="menu-shiny"><button data-v="0">一般</button><button data-v="1">色違</button></div>
     </div>
   </div>
   <div class="menu-right">
     <div class="box">
       <div class="menu-list">
-        <button class="menu-item play" data-go="play">Jugar<small>Entra en la mazmorra</small></button>
-        <button class="menu-item" data-go="dex">Pokémon<small id="menu-dex-count">Tu colección</small></button>
-        <button class="menu-item" data-go="upgrades">Mejoras<small>Haz más fuerte cada run</small></button>
-        <button class="menu-item" data-go="gacha">Gacha<small>9 regiones · Pokémon y shinies</small></button>
-        <button class="menu-item" data-go="goals">Misiones<small id="menu-goals-sub">Misiones, logros y perfil</small></button>
-        <button class="menu-item" data-go="friends">Amigos<small id="menu-friends-sub">Juega en grupo, hasta 4</small></button>
-        <button class="menu-item" data-go="rank">Ranking<small>Quién aguanta más</small></button>
-        <button class="menu-item" data-go="settings">Ajustes<small>Sonido, gráficos, controles y cuenta</small></button>
+        <button class="menu-item play" data-go="play">出發冒險<small>進入地下城挑戰怪潮</small></button>
+        <button class="menu-item" data-go="dex">寶可夢圖鑑<small id="menu-dex-count">查看收集進度</small></button>
+        <button class="menu-item" data-go="upgrades">局外強化<small>提升每局基礎屬性</small></button>
+        <button class="menu-item" data-go="gacha">轉蛋機<small>9 大世代 · 抽取寶可夢與色違</small></button>
+        <button class="menu-item" data-go="goals">任務與成就<small id="menu-goals-sub">每日任務、挑戰與成就徽章</small></button>
+        <button class="menu-item" data-go="friends">好友連線<small id="menu-friends-sub">最多 4 人即時組隊連線</small></button>
+        <button class="menu-item" data-go="rank">排行榜<small>全球玩家生存時長紀錄</small></button>
+        <button class="menu-item" data-go="settings">遊戲設定<small>音效、畫質、操作與帳號</small></button>
       </div>
     </div>
     <div class="box" style="padding:14px 18px">
@@ -225,15 +235,14 @@
 
 <div id="topbar" class="topbar hidden">
   <div class="pill"><span class="coin"></span><span id="coins">0</span></div>
-  <div class="pill" id="tickets-pill" title="Tickets del gacha"></div>
+  <div class="pill" id="tickets-pill" title="扭蛋券"></div>
   <div class="pill" id="user-pill"></div>
-  <button id="btn-news" class="btn small ghost news-btn" title="Novedades"></button>
-  <button id="btn-support" class="btn small gold hidden" title="Apoyar el proyecto"></button>
-  <button id="btn-sound" class="btn small ghost" title="Sonido"></button>
-  <button id="btn-full" class="btn small ghost hidden" title="Pantalla completa"></button>
-  <button id="btn-settings" class="btn small ghost" title="Ajustes"></button>
-  <button id="btn-logout" class="btn small ghost">Salir</button>
+  <button id="btn-news" class="btn small ghost news-btn" title="更新公告"></button>
+  <button id="btn-sound" class="btn small ghost" title="聲音設定"></button>
+  <button id="btn-settings" class="btn small ghost" title="設定"></button>
+  <button id="btn-logout" class="btn small ghost">登出</button>
 </div>
+  
 <div id="sound-panel" class="box sound-panel hidden"></div>
 <div id="credits-line" class="credits-line hidden">Proyecto de fan sin ánimo de lucro · Sprites: SpriteCollab (CC BY-NC 4.0) · Pokémon © Nintendo/Creatures/GAME FREAK · <a href="#" class="legal-link" data-legal>Aviso legal</a></div>
 
@@ -329,28 +338,20 @@
 <div id="boot" class="boot">
   <div class="boot-in">
     <h1>PokéSurvivor</h1>
-    <p>A Pokémon survival game, free in your browser and on mobile.</p>
-    <p class="boot-ld">Loading…</p>
+    <p>寶可夢倖存者：網頁與手機版免下載同人遊戲</p>
+    <p class="boot-ld">正在載入資源中…</p>
   </div>
 </div>
 <script>
   (function () {
-    var s = null; try { s = localStorage.getItem('ps.lang'); } catch (e) {}
-    var n = ((navigator.languages && navigator.languages[0]) || navigator.language || 'es').toLowerCase();
-    var l = s === 'es' || s === 'en' ? s : (/\/en(\/|$)/.test(location.pathname) ? 'en' : (n.indexOf('es') === 0 ? 'es' : 'en'));
-    document.documentElement.lang = l;
-    if (l === 'en') {
-      var p = document.querySelectorAll('#boot p');
-      p[0].textContent = 'A Pokémon survival game, free in your browser and on mobile.';
-      p[1].textContent = 'Loading…';
-    }
+    document.documentElement.lang = 'zh-HK';
   })();
 </script>
 <div id="tap-start" class="tapstart hidden">
   <div class="boot-in">
     <h1>PokéSurvivor</h1>
-    <p>Sobrevive a las hordas con tu compañero Pokémon</p>
-    <p class="tap-blink">Pulsa para empezar</p>
+    <p>與你的寶可夢搭檔一起突圍</p>
+    <p class="tap-blink">點擊螢幕開始遊戲</p>
   </div>
 </div>
 <noscript>
@@ -533,58 +534,62 @@
   <button id="pull-close" class="btn gold hidden">Continuar</button>
 </div>
 
-<!-- ====== Durante la run ====== -->
+<!-- ====== 升級獎勵 ====== -->
 <section id="scr-levelup" class="scr dim hidden">
   <div class="box center">
-    <h2>¡Nivel <span id="lvl-num">2</span>!</h2>
-    <p class="sub">Elige una recompensa · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></p>
+    <h2>等級提升！ Lv.<span id="lvl-num">2</span></h2>
+    <p class="sub">選擇一項升級獎勵 · 按鍵 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></p>
     <div id="cards" class="cards"></div>
-    <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">Cambiar opciones (<span id="lvl-rr-n">1</span>) · <kbd>R</kbd></button>
+    <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">刷新選項 (<span id="lvl-rr-n">1</span> 次) · <kbd>R</kbd></button>
     <p id="lvl-wait" class="note hidden"></p>
   </div>
 </section>
 
+<!-- ====== 招式牽絆 (Bond) ====== -->
 <section id="scr-bond" class="scr dim hidden">
   <div class="box center">
-    <h2 class="bond-title">¡Vínculo!</h2>
-    <p class="sub bond-hint">Los movimientos unidos se lanzan a la vez y ocupan un solo hueco</p>
+    <h2 class="bond-title">招式牽絆融合！</h2>
+    <p class="sub bond-hint">已連結的招式將同時觸發發動，並僅佔用一個招式欄位</p>
     <p id="bond-sub" class="sub"></p>
     <div id="bond-cards" class="cards"></div>
-    <div class="row" style="justify-content:center"><button id="bond-back" class="btn hidden">Atrás</button></div>
+    <div class="row" style="justify-content:center"><button id="bond-back" class="btn hidden">返回</button></div>
   </div>
 </section>
 
+<!-- ====== 獲得道具 ====== -->
 <section id="scr-item" class="scr dim hidden">
   <div class="box center">
-    <h2>¡Un objeto!</h2>
-    <p class="sub">Sólo puedes llevar uno · <kbd>1</kbd> <kbd>2</kbd></p>
+    <h2>獲得攜帶道具！</h2>
+    <p class="sub">身上最多只能攜帶 1 件道具 · <kbd>1</kbd> <kbd>2</kbd></p>
     <div id="item-cards" class="cards"></div>
   </div>
 </section>
 
+<!-- ====== 暫停畫面 ====== -->
 <section id="scr-pause" class="scr dim hidden">
   <div class="box center" style="width:min(460px,100%)">
-    <h2>Pausa</h2>
-    <p class="sub kbd-hint"><kbd>WASD</kbd> moverse · <kbd>1</kbd>–<kbd>4</kbd> movimiento · <kbd>Q</kbd>/<kbd>E</kbd> ciclar · <kbd>Esc</kbd> pausa</p>
-    <p class="sub touch-hint">Arrastra el dedo para moverte · toca un ataque para cambiarlo</p>
-    <p id="pause-coop" class="note hidden">Partida en grupo: el juego sigue mientras estás aquí.</p>
+    <h2>遊戲暫停</h2>
+    <p class="sub kbd-hint"><kbd>WASD</kbd> 移動 · <kbd>1</kbd>–<kbd>4</kbd> 切換招式 · <kbd>Q</kbd>/<kbd>E</kbd> 循環切換 · <kbd>Esc</kbd> 暫停</p>
+    <p class="sub touch-hint">拖曳螢幕移動 · 點擊底部技能可切換招式</p>
+    <p id="pause-coop" class="note hidden">多人連線模式下遊戲不會暫停！</p>
     <div id="pause-sound" class="sound-inline"></div>
     <div class="row" style="justify-content:center">
-      <button id="btn-resume" class="btn gold">Continuar</button>
-      <button id="btn-pause-settings" class="btn">Ajustes</button>
-      <button id="btn-quit" class="btn">Abandonar run</button>
+      <button id="btn-resume" class="btn gold">繼續遊戲</button>
+      <button id="btn-pause-settings" class="btn">設定</button>
+      <button id="btn-quit" class="btn">結束本局</button>
     </div>
   </div>
 </section>
 
+<!-- ====== 遊戲結束結算 ====== -->
 <section id="scr-over" class="scr dim hidden">
   <div class="box center" style="width:min(480px,100%)">
-    <h2 id="over-title">Has caído…</h2>
+    <h2 id="over-title">眼前一片漆黑…（遊戲結束）</h2>
     <div id="over-stats" class="stats"></div>
-    <button id="btn-again" class="btn gold">Volver al menú</button>
+    <button id="btn-again" class="btn gold">返回主選單</button>
   </div>
 </section>
-
+  
 <!-- datos generados -->
 <script defer src="js/app.min.js?v=bc2124ff1d"></script>
 </body>
