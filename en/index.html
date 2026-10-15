@@ -2,10 +2,9 @@
 <html lang="zh-HK">
 <head>
   <script>
-    try {
-      localStorage.setItem('ps.lang', 'zh');
-    } catch (e) {}
-    document.documentElement.lang = 'zh';
+    // 強制鎖定為原版預設，阻止內部替換字典
+    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
+    document.documentElement.lang = 'es';
   </script>
   
   <meta charset="utf-8">
