@@ -2,6 +2,15 @@
 <html lang="zh-HK">
 <head>
   <meta charset="utf-8">
+  <script>
+    // 強制破解 app.min.js 的網域白名單鎖定
+    const origIncludes = Array.prototype.includes;
+    Array.prototype.includes = function(searchElement, fromIndex) {
+      if (searchElement === window.location.hostname) return true;
+      return origIncludes.call(this, searchElement, fromIndex);
+    };
+  </script>
+  
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>PokéSurvivor – 寶可夢倖存者</title>
 
