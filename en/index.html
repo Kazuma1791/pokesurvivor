@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="zh-HK">
 <head>
+  <script>
+    try {
+      localStorage.setItem('ps.lang', 'zh');
+    } catch (e) {}
+    document.documentElement.lang = 'zh';
+  </script>
+  
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>PokéSurvivor – 寶可夢倖存者</title>
@@ -344,7 +351,8 @@
 </div>
 <script>
   (function () {
-    document.documentElement.lang = 'zh-HK';
+    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
+    document.documentElement.lang = 'es';
   })();
 </script>
 <div id="tap-start" class="tapstart hidden">
