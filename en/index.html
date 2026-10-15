@@ -1,29 +1,38 @@
 <!doctype html>
 <html lang="en">
+<!doctype html>
+<html lang="en">
 <head>
-  <!-- 引入 Firebase SDK (Compat 版本) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <meta charset="utf-8">
+  <!-- 注意：如果這是根目錄的 index.html，請務必刪除下面這行 <base href="../">；如果是 en/index.html 則保留 -->
+  <base href="../">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>PokéSurvivor – Free online Pokémon survival game (Survivor.io style)</title>
 
-<script>
-  // 貼上你在 Firebase Console 取得的設定
-  const firebaseConfig = {
-  apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
-  authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
-  databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "pokemonsurvivor-e89a5",
-  storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
-  messagingSenderId: "693180646327",
-  appId: "1:693180646327:web:f706004dea2a00124dde32"
-};
-  
-  // 初始化 Firebase
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-</script>
+  <!-- 引入 Firebase SDK (Compat 版本) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <script>
+    // 綁定到遊戲核心識別的全域物件 window.G
+    window.G = window.G || {};
+    window.G.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
+      authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
+      databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "pokemonsurvivor-e89a5",
+      storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
+      messagingSenderId: "693180646327",
+      appId: "1:693180646327:web:f706004dea2a00124dde32"
+    };
+
+    // 初始化 Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.G.FIREBASE_CONFIG);
+    }
+  </script>
 <meta charset="utf-8">
 <base href="../">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
