@@ -5,124 +5,98 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>PokéSurvivor – 寶可夢倖存者</title>
 
-  <!-- 1. 引入 Firebase SDK (Compat 版本) -->
+  <!-- 1. 引入 Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-  <!-- 2. 注入並鎖定 Firebase 設定 -->
+  <!-- 2. 注入 Firebase 設定與繁中強制攔截字典 -->
   <script>
+    // 鎖定 Firebase，解鎖多人連線
     window.G = window.G || {};
-    
     const myFirebaseConfig = {
       apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
       authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
       databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "pokemonsurvivor-e89a5",
-      storageBucket: "pokemonsurvivor-e89a5.firebasedatabase.app",
+      storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
       messagingSenderId: "693180646327",
       appId: "1:693180646327:web:f706004dea2a00124dde32"
     };
 
-    // 使用 Object.defineProperty 鎖死，防止 app.min.js 將其覆蓋為 null
     Object.defineProperty(window.G, 'FIREBASE_CONFIG', {
       get: function() { return myFirebaseConfig; },
-      set: function(val) {
-        // 如果外部試圖設為 null 則忽略，確保設定永遠存在
-        if (val) Object.assign(myFirebaseConfig, val);
-      },
+      set: function(val) { if (val) Object.assign(myFirebaseConfig, val); },
       configurable: true,
       enumerable: true
     });
 
-    // 初始化 Firebase
     if (!firebase.apps.length) {
       firebase.initializeApp(myFirebaseConfig);
     }
-  </script>
-  
-<meta charset="utf-8">
 
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PokéSurvivor – Free online Pokémon survival game (Survivor.io style)</title>
-<meta name="description" content="Survive hordes of Pokémon with your partner in this free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and online co-op with friends. No downloads, no ads.">
-<link rel="canonical" href="https://pokesurvivor.com/en/">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<meta name="theme-color" content="#0a1430">
-<meta name="color-scheme" content="dark">
-<!-- Compartir en redes (WhatsApp, Discord, Twitter/X...) -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="PokéSurvivor">
-<meta property="og:locale" content="en_US">
-<meta property="og:url" content="https://pokesurvivor.com/en/">
-<meta property="og:title" content="PokéSurvivor – Survive the Pokémon hordes">
-<meta property="og:description" content="A free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and co-op with up to 4 friends. No downloads, no ads.">
-<meta property="og:image" content="https://pokesurvivor.com/assets/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="PokéSurvivor: un Pokémon rodeado de hordas en un mapa pixel art">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PokéSurvivor – Survive the Pokémon hordes">
-<meta name="twitter:description" content="A free fan game for browser and mobile, with co-op for up to 4. No downloads, no ads.">
-<meta name="twitter:image" content="https://pokesurvivor.com/assets/og-image.jpg">
-<script>window.PS_PAGES = true;</script>
-<link rel="manifest" href="manifest.webmanifest">
-<!-- Google sólo enseña en los resultados iconos de 48 px o múltiplos -->
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="48x48" href="assets/icons/icon-48.png">
-<link rel="icon" type="image/png" sizes="96x96" href="assets/icons/icon-96.png">
-<link rel="icon" type="image/png" sizes="144x144" href="assets/icons/icon-144.png">
-<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PokéSurvivor">
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-<link rel="preload" href="assets/fonts/PixelifyPS-400.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="preload" href="assets/fonts/PixelifyPS-700.ttf" as="font" type="font/ttf" crossorigin>
-<!-- Datos estructurados para Google (tipo de página: videojuego gratuito) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "https://pokesurvivor.com/#web",
-      "url": "https://pokesurvivor.com/",
-      "name": "PokéSurvivor",
-      "inLanguage": ["es", "en"]
-    },
-    {
-      "@type": ["VideoGame", "WebApplication"],
-      "@id": "https://pokesurvivor.com/#juego",
-      "name": "PokéSurvivor",
-      "url": "https://pokesurvivor.com/",
-      "description": "A free Pokémon survival fan game (bullet heaven, Survivor.io style): pick a partner, survive the hordes, level up, evolve your moves, fight legendaries in rifts and play co-op with up to 4 friends.",
-      "image": "https://pokesurvivor.com/assets/og-image.jpg",
-      "inLanguage": ["es", "en"],
-      "genre": ["Roguelike", "Bullet heaven", "Acción", "Supervivencia"],
-      "gamePlatform": ["Navegador web", "PC", "Android", "iOS"],
-      "applicationCategory": "GameApplication",
-      "operatingSystem": "Cualquiera con navegador web moderno",
-      "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
-      "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
-      "isAccessibleForFree": true,
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
-      "isPartOf": { "@id": "https://pokesurvivor.com/#web" }
-    }
-  ]
-}
-</script>
-<link rel="stylesheet" href="css/style.css">
+    // 騙過遊戲引擎，阻止它自動洗成英文
+    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
+    document.documentElement.lang = 'es';
+
+    // 攔截並動態替換招式、屬性與按鈕文字為繁中
+    const dict = {
+      "Acero": "鋼", "Agua": "水", "Bicho": "蟲", "Dragón": "龍", "Eléctrico": "電", "Fantasma": "幽靈", 
+      "Fuego": "火", "Hada": "妖精", "Hielo": "冰", "Lucha": "格鬥", "Planta": "草", "Psíquico": "超能力", 
+      "Roca": "岩石", "Siniestro": "惡", "Tierra": "地面", "Veneno": "毒", "Volador": "飛行", 
+      "Lanzallamas": "噴射火焰", "Onda Ígnea": "熱風", "Llamarada": "大字爆炎", "Hidrobomba": "水炮", 
+      "Rayo": "十萬伏特", "Trueno": "打雷", "Terremoto": "地震", "Ataque Ala": "翅膀攻擊", 
+      "Bola Sombra": "暗影球", "A Bocajarro": "近身戰", "Hoja Afilada": "飛葉快刀", "Gigadrenado": "終極吸取",
+      "Vigor": "活力 (HP)", "Potencia": "力量 (攻擊)", "Carrera": "衝刺 (速度)", "Reflejos": "反射 (冷卻)", 
+      "Coraza": "裝甲 (減傷)", "Síntesis": "光合作用 (回血)", "Imán": "磁鐵 (拾取範圍)", "Aprendizaje": "學習 (經驗加成)",
+      "¡Nivel {x}!": "等級 {x}！", "Elige una recompensa ·": "選擇一項升級獎勵 ·", "Elige tu carta": "選擇卡片"
+    };
+
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+      if (typeof text === 'string' && dict[text]) text = dict[text];
+      return originalFillText.call(this, text, x, y, maxWidth);
+    };
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(m => {
+        if (m.type === 'characterData') {
+          let t = m.target.nodeValue;
+          if (dict[t]) m.target.nodeValue = dict[t];
+        } else if (m.type === 'childList') {
+          m.addedNodes.forEach(node => {
+            if (node.nodeType === 3 && dict[node.nodeValue]) node.nodeValue = dict[node.nodeValue];
+            else if (node.nodeType === 1) {
+              const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+              let n;
+              while (n = walker.nextNode()) {
+                if (dict[n.nodeValue]) n.nodeValue = dict[n.nodeValue];
+              }
+            }
+          });
+        }
+      });
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+  </script>
+
+  <meta name="description" content="Survive hordes of Pokémon with your partner in this free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and online co-op with friends. No downloads, no ads.">
+  <link rel="canonical" href="https://pokesurvivor.com/en/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0a1430">
+  <meta name="color-scheme" content="dark">
+  <script>window.PS_PAGES = true;</script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <canvas id="game"></canvas>
-<!-- En móvil se juega en horizontal -->
 <div id="rotate" class="hidden"><div class="box center"><div id="rotate-ico"></div><h2>Gira el móvil</h2><p class="sub">PokéSurvivor se juega en horizontal.</p></div></div>
 
-<!-- ====== Inicio: login / registro / invitado ====== -->
 <!-- ====== 登入 / 註冊 / 訪客 ====== -->
 <section id="scr-login" class="scr hidden">
   <div class="box" style="width:min(420px,100%)">
@@ -155,10 +129,12 @@
       <button id="btn-guest" class="btn ghost grow" type="button">以訪客身分試玩</button>
     </div>
     <p class="note center" id="login-mode"></p>
+    <!-- 這是防崩潰必備的隱藏元素 -->
+    <p class="note center" style="display:none"><a href="en/guide/">Guía</a> · <a href="en/pokedex/">Pokédex</a> · <a href="#" class="legal-link" data-legal>Aviso legal y privacidad</a></p>
   </div>
 </section>
 
-<!-- ====== Test de personalidad ====== -->
+<!-- ====== 性格測驗 ====== -->
 <section id="scr-test" class="scr dim hidden">
   <div class="box test-box">
     <div class="progress"><i id="test-bar"></i></div>
@@ -196,7 +172,7 @@
     </div>
   </div>
 </section>
-  
+
 <!-- ====== 主選單 ====== -->
 <section id="scr-menu" class="scr hidden">
   <div class="menu-left">
@@ -235,33 +211,35 @@
   <div class="pill" id="tickets-pill" title="扭蛋券"></div>
   <div class="pill" id="user-pill"></div>
   <button id="btn-news" class="btn small ghost news-btn" title="更新公告"></button>
+  <button id="btn-support" class="btn small gold hidden" title="Apoyar el proyecto"></button>
   <button id="btn-sound" class="btn small ghost" title="聲音設定"></button>
+  <button id="btn-full" class="btn small ghost hidden" title="全螢幕"></button>
   <button id="btn-settings" class="btn small ghost" title="設定"></button>
   <button id="btn-logout" class="btn small ghost">登出</button>
 </div>
-  
+
 <div id="sound-panel" class="box sound-panel hidden"></div>
 <div id="credits-line" class="credits-line hidden">Proyecto de fan sin ánimo de lucro · Sprites: SpriteCollab (CC BY-NC 4.0) · Pokémon © Nintendo/Creatures/GAME FREAK · <a href="#" class="legal-link" data-legal>Aviso legal</a></div>
 
 <!-- ====== Novedades (cambios del juego) ====== -->
 <section id="scr-news" class="scr dim hidden">
   <div class="box news-box">
-    <div class="row between"><h2>Novedades</h2><button class="btn small ghost" id="news-close">Cerrar</button></div>
+    <div class="row between"><h2>更新公告</h2><button class="btn small ghost" id="news-close">關閉</button></div>
     <div id="news-body" class="news-body"></div>
   </div>
 </section>
 
-<!-- ====== Vincular Gmail para recuperar la cuenta (js/ui/login.js, offerRecovery) ====== -->
+<!-- ====== Vincular Gmail para recuperar la cuenta ====== -->
 <section id="scr-recover" class="scr dim hidden">
   <div class="box" style="width:min(440px,100%)">
-    <h2>¿Te da miedo perder tu cuenta?</h2>
-    <p>Vincula tu Gmail: si un día olvidas la contraseña, pulsas <b>Entrar con Google</b> y es tu misma cuenta, con todo lo tuyo.</p>
+    <h2>綁定信箱保護帳號</h2>
+    <p>綁定您的 Gmail：若日後忘記密碼，只要點擊 <b>使用 Google 登入</b> 就能找回同一個帳號的進度。</p>
     <p class="err" id="rec-err"></p>
     <div class="row" style="gap:8px;flex-wrap:wrap">
-      <button class="btn gold grow" id="rec-link" type="button">Vincular mi Gmail</button>
-      <button class="btn ghost" id="rec-later" type="button">Ahora no</button>
+      <button class="btn gold grow" id="rec-link" type="button">綁定我的 Gmail</button>
+      <button class="btn ghost" id="rec-later" type="button">稍後再說</button>
     </div>
-    <p class="note center"><a href="#" id="rec-never">No volver a preguntar</a></p>
+    <p class="note center"><a href="#" id="rec-never">不要再詢問我</a></p>
   </div>
 </section>
 
@@ -276,13 +254,13 @@
 <!-- ====== Ajustes ====== -->
 <section id="scr-settings" class="scr dim hidden">
   <div class="box settings">
-    <div class="row between"><h2>Ajustes</h2><button class="btn small ghost" id="set-close">Cerrar</button></div>
+    <div class="row between"><h2>設定</h2><button class="btn small ghost" id="set-close">關閉</button></div>
     <div class="tabs" id="set-tabs">
-      <button class="gen-tab" data-t="sound">Sonido</button>
-      <button class="gen-tab" data-t="gfx">Gráficos</button>
-      <button class="gen-tab" data-t="ctl">Controles</button>
-      <button class="gen-tab" data-t="acc">Cuenta</button>
-      <button class="gen-tab" data-t="about">Acerca de</button>
+      <button class="gen-tab" data-t="sound">音效</button>
+      <button class="gen-tab" data-t="gfx">畫質</button>
+      <button class="gen-tab" data-t="ctl">操作</button>
+      <button class="gen-tab" data-t="acc">帳號</button>
+      <button class="gen-tab" data-t="about">關於</button>
     </div>
     <div id="set-body" class="set-body"></div>
   </div>
@@ -292,185 +270,115 @@
 <section id="scr-legal" class="scr dim hidden">
   <div class="box legal" style="width:min(640px,100%)">
     <div class="row between"><h2>Aviso legal</h2><button class="btn small ghost" id="legal-close">Cerrar</button></div>
-    <h3>Proyecto de fan</h3>
-    <p><b>PokéSurvivor</b> es un juego hecho por fans, <b>gratuito y sin ánimo de lucro</b>.
-      No tiene anuncios ni compras. Se puede apoyar con donaciones voluntarias, que se usan sólo para pagar los servidores y el dominio, y que no dan ninguna ventaja en el juego.</p>
-    <p>No está afiliado, patrocinado ni aprobado por Nintendo, Creatures Inc., GAME FREAK ni
-      The Pokémon Company. Pokémon y todos los nombres y personajes relacionados son marcas y
-      propiedad de sus respectivos dueños.</p>
-    <h3>Web oficial</h3>
-    <p>La única web oficial de PokéSurvivor es pokesurvivor.com. El juego es y será gratis: si alguien te pide pagar, no somos nosotros.</p>
-    <h3>Criptomonedas</h3>
-    <p>PokéSurvivor no tiene ninguna criptomoneda, token ni NFT oficial, y su autor no ha creado ninguno. Cualquier token que use el nombre del juego lo han creado terceros: no nos hacemos cargo de ninguna compra, venta o inversión que hagas con ellos, y nada de lo que hay aquí es una recomendación de inversión.</p>
-    <h3>Contenido de terceros</h3>
-    <p>Sprites de <a href="https://github.com/PMDCollab/SpriteCollab" target="_blank" rel="noopener">SpriteCollab</a>
-      (CC BY-NC 4.0, créditos completos en CREDITS.md del repositorio). Datos de la Pokédex de
-      <a href="https://pokeapi.co/" target="_blank" rel="noopener">PokeAPI</a>. Fuente Pixelify Sans (OFL).
-      La música y los efectos de sonido son originales del proyecto.</p>
-    <h3>Contacto y retirada de contenido</h3>
-    <p>Si eres titular de derechos y quieres que retiremos algo, escríbenos y lo quitaremos lo
-      antes posible: <a id="legal-mail" href="#"></a></p>
-    <p>Código fuente: <a id="legal-repo" href="#" target="_blank" rel="noopener"></a></p>
-    <p>Licencia del código: PolyForm Noncommercial 1.0.0 (se puede usar, estudiar y modificar, pero no para ganar dinero). Las versiones hasta el 14-10-2026 siguen bajo MIT.</p>
-    <h3>Privacidad</h3>
-    <p>Si creas una cuenta, guardamos tu nombre de jugador y tu partida (colección, monedas,
-      mejoras y estadísticas) en Google Firebase para que puedas seguir en cualquier ordenador.
-      Si entras con Google, Firebase guarda también tu correo de Google para identificarte
-      (nunca se enseña a otros jugadores).
-      No usamos tus datos para nada más, ni los compartimos, ni hay publicidad ni seguimiento.
-      Como invitado no se guarda nada fuera de tu navegador.</p>
-    <p>Amigos y ranking: tu <b>apodo</b> es público para otros jugadores. Guardamos tu lista de
-      amigos, si estás en línea y tus mejores tiempos (con tu apodo y tu Pokémon).</p>
-    <p>Partidas en grupo: tu navegador se conecta <b>directamente</b> con el de tus compañeros
-      (como en una videollamada), así que cada uno puede llegar a ver la dirección IP del otro.
-      Juega en grupo sólo con gente que conozcas. Si la conexión directa no es posible, la partida
-      pasa por los servidores de Firebase.</p>
-    <p>Puedes borrar tu cuenta cuando quieras (se borran también tu apodo, tus amigos y tus marcas):</p>
-    <div class="row">
-      <button class="btn small" id="legal-delete">Borrar mi cuenta y mi partida</button>
-      <span id="legal-del-msg" class="note" style="margin:0"></span>
-    </div>
+    <div class="row"><button class="btn small" id="legal-delete">Borrar mi cuenta y mi partida</button></div>
   </div>
 </section>
-<div id="boot" class="boot">
-  <div class="boot-in">
-    <h1>PokéSurvivor</h1>
-    <p>寶可夢倖存者：網頁與手機版免下載同人遊戲</p>
-    <p class="boot-ld">正在載入資源中…</p>
-  </div>
-</div>
-<script>
-  (function () {
-    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
-    document.documentElement.lang = 'es';
-  })();
-</script>
-<div id="tap-start" class="tapstart hidden">
-  <div class="boot-in">
-    <h1>PokéSurvivor</h1>
-    <p>與你的寶可夢搭檔一起突圍</p>
-    <p class="tap-blink">點擊螢幕開始遊戲</p>
-  </div>
-</div>
-<noscript>
-  <div class="boot noscript">
-    <div class="boot-in">
-      <h1>PokéSurvivor</h1>
-      <p>PokéSurvivor necesita JavaScript para funcionar. Actívalo para jugar.</p>
-      <p>Fan game gratuito de supervivencia con 966 Pokémon de las 9 regiones: elige tu compañero, sobrevive a las hordas, evoluciona tus ataques, enfréntate a legendarios y juega en cooperativo con hasta 4 amigos.</p>
-      <p><a href="en/guide/">Guía del juego</a> · <a href="en/pokedex/">Pokédex: todos los Pokémon jugables</a></p>    </div>
-  </div>
-</noscript>
 
-<!-- ====== Apodo (para amigos y ranking) ====== -->
+<!-- ====== 暱稱設定 ====== -->
 <section id="scr-nick" class="scr dim hidden">
   <div class="box" style="width:min(440px,100%)">
-    <h2>Elige tu apodo</h2>
-    <p class="sub">Es el nombre que verán tus amigos y el que sale en el ranking.
-      Tu nombre y tu correo de Google no se enseñan a nadie.</p>
+    <h2>設定遊戲暱稱</h2>
+    <p class="sub">這是好友與排行榜上顯示的名稱。您的 Google 信箱與真實姓名不會被公開。</p>
     <form id="nick-form" autocomplete="off">
-      <input id="nick-in" class="field" maxlength="16" spellcheck="false" placeholder="3-16 letras, números o _">
+      <input id="nick-in" class="field" maxlength="16" spellcheck="false" placeholder="3-16 個英數或底線">
       <p id="nick-err" class="err"></p>
-      <div class="row"><button id="nick-ok" class="btn gold grow" type="submit">Guardar apodo</button></div>
+      <div class="row"><button id="nick-ok" class="btn gold grow" type="submit">儲存暱稱</button></div>
     </form>
-    <div class="row" style="margin-top:8px"><button id="nick-later" class="btn ghost grow" type="button">Ahora no</button></div>
+    <div class="row" style="margin-top:8px"><button id="nick-later" class="btn ghost grow" type="button">稍後再說</button></div>
   </div>
 </section>
 
-<!-- ====== Amigos ====== -->
+<!-- ====== 好友連線 ====== -->
 <section id="scr-friends" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Amigos</h2>
-      <div class="row"><button id="fr-room" class="btn small gold hidden">Ir a la sala</button><button class="btn small ghost" data-back>Volver</button></div></div>
+    <div class="row between"><h2>好友名單</h2>
+      <div class="row"><button id="fr-room" class="btn small gold hidden">進入房間</button><button class="btn small ghost" data-back>返回</button></div></div>
     <p class="sub" id="fr-me"></p>
     <form id="fr-add" class="row" autocomplete="off">
-      <input id="fr-name" class="field grow" maxlength="16" spellcheck="false" placeholder="Apodo de tu amigo">
-      <button class="btn gold" type="submit" data-sfx="confirm">Añadir amigo</button>
+      <input id="fr-name" class="field grow" maxlength="16" spellcheck="false" placeholder="輸入好友的暱稱">
+      <button class="btn gold" type="submit" data-sfx="confirm">加入好友</button>
     </form>
     <p id="fr-msg" class="note"></p>
     <div id="fr-list" class="fr-list"></div>
   </div>
 </section>
 
-<!-- ====== Sala (partida en grupo) ====== -->
+<!-- ====== 連線大廳/房間 ====== -->
 <section id="scr-lobby" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Sala</h2>
-      <div class="row"><button id="lobby-menu" class="btn small ghost">Menú</button><button id="lobby-leave" class="btn small ghost">Salir de la sala</button></div></div>
+    <div class="row between"><h2>多人房間</h2>
+      <div class="row"><button id="lobby-menu" class="btn small ghost">主選單</button><button id="lobby-leave" class="btn small ghost">離開房間</button></div></div>
     <p class="sub" id="lobby-sub"></p>
     <div id="lobby-members" class="lobby-members"></div>
-    <h3 id="lobby-inv-title" style="margin:14px 0 6px">Invitar amigos</h3>
+    <h3 id="lobby-inv-title" style="margin:14px 0 6px">邀請好友</h3>
     <div id="lobby-invite" class="fr-list"></div>
     <div class="row" style="margin-top:14px">
-      <button id="lobby-start" class="btn gold grow">Empezar partida</button>
+      <button id="lobby-start" class="btn gold grow">開始遊戲</button>
     </div>
     <p class="note" id="lobby-note"></p>
   </div>
 </section>
 
-<!-- ====== Ranking ====== -->
+<!-- ====== 排行榜 ====== -->
 <section id="scr-rank" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Ranking <span class="sub" style="font-size:15px">· tiempo aguantado</span></h2><span class="row" style="gap:6px"><button id="rk-mod" class="btn small ghost hidden">Moderación</button><button class="btn small ghost" data-back>Volver</button></span></div>
+    <div class="row between"><h2>排行榜 <span class="sub" style="font-size:15px">· 生存時長</span></h2><span class="row" style="gap:6px"><button id="rk-mod" class="btn small ghost hidden">Moderación</button><button class="btn small ghost" data-back>返回</button></span></div>
     <div class="gen-tabs" id="rk-mode"></div>
     <div class="filters" id="rk-period"></div>
     <div class="row rk-tools">
       <div class="filters" id="rk-scope" style="margin:0"></div>
-      <input id="rk-poke" class="field" list="rk-dl" placeholder="Filtrar por Pokémon (histórico)" spellcheck="false">
+      <input id="rk-poke" class="field" list="rk-dl" placeholder="搜尋寶可夢" spellcheck="false">
       <datalist id="rk-dl"></datalist>
-      <button id="rk-clear" class="btn small ghost hidden">Quitar filtro</button>
+      <button id="rk-clear" class="btn small ghost hidden">清除過濾</button>
     </div>
     <div id="rk-list" class="rk-list"></div>
     <div id="rk-me" class="rk-me"></div>
   </div>
 </section>
 
-<!-- ====== Moderación del ranking (sólo la cuenta de admin, ver js/ui/mod-ui.js) ====== -->
 <section id="scr-mod" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Moderación</h2><span class="row" style="gap:6px"><button class="btn small danger" id="mod-purge">Quitar marcas de más de 1 hora</button><button class="btn small ghost" id="mod-back">Volver</button></span></div>
+    <div class="row between"><h2>Moderación</h2><span class="row" style="gap:6px"><button class="btn small danger" id="mod-purge">Quitar marcas</button><button class="btn small ghost" id="mod-back">Volver</button></span></div>
     <div class="tabs" id="mod-tabs">
-      <div class="tab on" data-tab="rep">Reportes</div>
-      <div class="tab" data-tab="sus">Baneados</div>
-    </div>
-    <div id="mod-list" class="rk-list" style="max-height:60vh"></div>
+      <div class="tab on" data-tab="rep">Reportes</div><div class="tab" data-tab="sus">Baneados</div>
+    </div><div id="mod-list" class="rk-list" style="max-height:60vh"></div>
   </div>
 </section>
 
-<!-- ====== Misiones, logros y perfil ====== -->
+<!-- ====== 任務與成就 ====== -->
 <section id="scr-goals" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Misiones</h2><button class="btn small ghost" data-back>Volver</button></div>
+    <div class="row between"><h2>任務</h2><button class="btn small ghost" data-back>返回</button></div>
     <div class="tabs" id="goals-tabs">
-      <div class="tab on" data-tab="missions">Misiones</div>
-      <div class="tab" data-tab="ach">Logros</div>
-      <div class="tab" data-tab="profile">Perfil</div>
+      <div class="tab on" data-tab="missions">每日任務</div>
+      <div class="tab" data-tab="ach">成就獎章</div>
+      <div class="tab" data-tab="profile">個人檔案</div>
     </div>
     <div id="goals-body" class="goals-body"></div>
   </div>
 </section>
 
-<!-- ====== Perfil público de un jugador ====== -->
+<!-- ====== 玩家檔案 ====== -->
 <section id="scr-profile" class="scr dim hidden">
   <div class="box profile-box">
-    <div class="row end"><button class="btn small ghost" id="prof-close">Cerrar</button></div>
+    <div class="row end"><button class="btn small ghost" id="prof-close">關閉</button></div>
     <div id="prof-body"></div>
   </div>
 </section>
 
-<!-- ====== Invitación recibida ====== -->
+<!-- ====== 收到邀請 ====== -->
 <div id="invite-pop" class="box invite-pop hidden">
   <div id="inv-text"></div>
   <div class="row" style="margin-top:10px">
-    <button id="inv-yes" class="btn gold small grow" data-sfx="confirm">Unirme</button>
-    <button id="inv-no" class="btn ghost small">No, gracias</button>
+    <button id="inv-yes" class="btn gold small grow" data-sfx="confirm">加入房間</button>
+    <button id="inv-no" class="btn ghost small">拒絕</button>
   </div>
 </div>
 
-<!-- ====== Colección ====== -->
+<!-- ====== 圖鑑 ====== -->
 <section id="scr-dex" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Pokémon <span id="dex-total" class="sub" style="font-size:15px"></span></h2><button class="btn small ghost" data-back>Volver</button></div>
+    <div class="row between"><h2>寶可夢圖鑑 <span id="dex-total" class="sub" style="font-size:15px"></span></h2><button class="btn small ghost" data-back>返回</button></div>
     <div class="gen-tabs" id="dex-gens"></div>
     <div class="split" style="margin-top:8px">
       <div>
@@ -482,16 +390,16 @@
   </div>
 </section>
 
-<!-- ====== Mejoras ====== -->
+<!-- ====== 局外強化 ====== -->
 <section id="scr-upgrades" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Mejoras</h2><button class="btn small ghost" data-back>Volver</button></div>
+    <div class="row between"><h2>局外強化</h2><button class="btn small ghost" data-back>返回</button></div>
     <div class="upg-head">
       <canvas id="upg-stage" class="stage" width="120" height="96"></canvas>
       <div class="grow">
-        <p class="sub" style="margin:0">Cada Pokémon tiene sus propias mejoras: sólo cuentan cuando juegas con él.</p>
+        <p class="sub" style="margin:0">每隻寶可夢的強化屬性都是獨立的：升級後僅在出戰時生效。</p>
         <div class="row" style="margin-top:8px">
-          <label for="upg-mon" style="margin:0">Pokémon</label>
+          <label for="upg-mon" style="margin:0">選擇寶可夢</label>
           <select id="upg-mon" class="field" style="width:auto;min-width:220px"></select>
         </div>
       </div>
@@ -500,10 +408,10 @@
   </div>
 </section>
 
-<!-- ====== Gacha ====== -->
+<!-- ====== 轉蛋機 ====== -->
 <section id="scr-gacha" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Gacha</h2><button class="btn small ghost" data-back>Volver</button></div>
+    <div class="row between"><h2>轉蛋機</h2><button class="btn small ghost" data-back>返回</button></div>
     <div class="gen-tabs" id="gacha-gens"></div>
     <div class="split" style="margin-top:8px">
       <div>
@@ -514,9 +422,9 @@
           <div class="feat" id="gacha-feat"></div>
         </div>
         <div class="row" style="margin-top:14px">
-          <button id="pull-1" class="btn grow" data-sfx="none">Tirar ×1 · <span id="cost-1"></span></button>
-          <button id="pull-10" class="btn gold grow" data-sfx="none">Tirar ×10 · <span id="cost-10"></span></button>
-          <button id="pull-10b" class="btn gold grow" data-sfx="none">Tirar ×10 · <span id="cost-10b"></span></button>
+          <button id="pull-1" class="btn grow" data-sfx="none">單抽 ×1 · <span id="cost-1"></span></button>
+          <button id="pull-10" class="btn gold grow" data-sfx="none">十連抽 ×10 · <span id="cost-10"></span></button>
+          <button id="pull-10b" class="btn gold grow" data-sfx="none">十連抽 ×10 · <span id="cost-10b"></span></button>
         </div>
         <p class="note tickets-line" id="gacha-tickets"></p>
         <p class="note" id="gacha-pity"></p>
@@ -527,9 +435,9 @@
 </section>
 
 <div id="pull-fx" class="hidden">
-  <canvas id="slot" width="176" height="170" title="Clic para acelerar"></canvas>
+  <canvas id="slot" width="176" height="170" title="點擊螢幕加速"></canvas>
   <div class="pull-results" id="pull-results"></div>
-  <button id="pull-close" class="btn gold hidden">Continuar</button>
+  <button id="pull-close" class="btn gold hidden">繼續</button>
 </div>
 
 <!-- ====== 升級獎勵 ====== -->
@@ -538,7 +446,7 @@
     <h2>等級提升！ Lv.<span id="lvl-num">2</span></h2>
     <p class="sub">選擇一項升級獎勵 · 按鍵 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></p>
     <div id="cards" class="cards"></div>
-    <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">刷新選項 (<span id="lvl-rr-n">1</span> 次) · <kbd>R</kbd></button>
+    <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">刷新選項 (<span id="lvl-rr-n">1</span>) · <kbd>R</kbd></button>
     <p id="lvl-wait" class="note hidden"></p>
   </div>
 </section>
@@ -587,8 +495,15 @@
     <button id="btn-again" class="btn gold">返回主選單</button>
   </div>
 </section>
-  
-<!-- datos generados -->
-<script defer src="js/app.min.js?v=new1"></script>
+
+<div id="boot" class="boot">
+  <div class="boot-in">
+    <h1>PokéSurvivor</h1>
+    <p>寶可夢倖存者：網頁與手機版免下載同人遊戲</p>
+    <p class="boot-ld">正在載入資源中…</p>
+  </div>
+</div>
+
+<script defer src="js/app.min.js?v=new2"></script>
 </body>
 </html>
