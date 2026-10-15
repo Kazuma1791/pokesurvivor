@@ -98,95 +98,84 @@
       "Semanales":"每週任務", "Recoger":"領取", "Equipar":"裝備", "Volver":"返回"
     };
     
-    // 3. 智慧動態翻譯邏輯
-    const translate = (text) => {
-      if (typeof text !== 'string') return text;
-      
-      // 完全命中字典直接回傳
-      if (zhDict[text]) return zhDict[text];
-      
-      // 動態替換等級文字
-      let lvlMatch = text.match(/^(¡Nivel|Level) (\d+)!?$/i);
-      if (lvlMatch) return `等級提升！ Lv.${lvlMatch[2]}`;
+    // 3. 強化版動態翻譯邏輯（自動過濾隱藏空白與換行）
+        const translate = (text) => {
+          if (typeof text !== 'string') return text;
+          
+          // 清除多餘的隱藏空白、換行，將文字標準化
+          let t = text.trim().replace(/\s+/g, ' ');
+          if (!t) return text;
+          
+          if (zhDict[t]) return zhDict[t];
+          
+          let lvlMatch = t.match(/^(¡Nivel|Level)\s+(\d+)!?$/i);
+          if (lvlMatch) return `等級提升！ Lv.${lvlMatch[2]}`;
 
-      // 動態替換「新獲得的技能」
-      let newMatch = text.match(/^(Nuevo|New) · (.*)$/i);
-      if (newMatch) {
-         let skillName = zhDict[newMatch[2]] || newMatch[2];
-         return `新學習 · ${skillName}`;
-      }
+          let newMatch = t.match(/^(Nuevo|New)\s*·\s*(.*)$/i);
+          if (newMatch) {
+             let skillName = zhDict[newMatch[2]] || newMatch[2];
+             return `新學習 · ${skillName}`;
+          }
 
-      // 數值正則替換 (支援英文與西文)
-      let replaced = text;
-      replaced = replaced.replace(/daño|damage/gi, "傷害")
-                         .replace(/recarga|cooldown/gi, "冷卻")
-                         .replace(/alcance|range/gi, "範圍")
-                         .replace(/radio|radius/gi, "半徑")
-                         .replace(/proyectiles|proyectil|projectiles|projectile/gi, "投射物")
-                         .replace(/perforación|pierce/gi, "穿透")
-                         .replace(/duración|duration/gi, "持續時間")
-                         .replace(/orbes|orbe|orbs|orb/gi, "環繞球")
-                         .replace(/potencia|power/gi, "威力")
-                         .replace(/acumulación máxima|max stack/gi, "最大充能數")
-                         .replace(/acumulación|stack/gi, "充能數")
-                         .replace(/más grandes|bigger/gi, "體積變大")
-                         .replace(/grosor|width/gi, "寬度")
-                         .replace(/Golpea en 360°|hits in 360°/gi, "360° 攻擊")
-                         .replace(/ y | and /gi, " 與 ");
-                         
-      return replaced !== text ? replaced : text;
-    };
-    
-    // 4. 攔截 Canvas 繪製 (應用到局內升級卡片、傷害數字等)
-    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
-    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-      return originalFillText.call(this, translate(text), x, y, maxWidth);
-    };
-    const originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
-    CanvasRenderingContext2D.prototype.measureText = function(text) {
-      return originalMeasureText.call(this, translate(text));
-    };
+          let replaced = t;
+          replaced = replaced.replace(/daño|damage/gi, "傷害")
+                             .replace(/recarga|cooldown/gi, "冷卻")
+                             .replace(/alcance|range/gi, "範圍")
+                             .replace(/radio|radius/gi, "半徑")
+                             .replace(/proyectiles|proyectil|projectiles|projectile/gi, "投射物")
+                             .replace(/perforación|pierce/gi, "穿透")
+                             .replace(/duración|duration/gi, "持續時間")
+                             .replace(/orbes|orbe|orbs|orb/gi, "環繞球")
+                             .replace(/potencia|power/gi, "威力")
+                             .replace(/acumulación máxima|max stack/gi, "最大充能數")
+                             .replace(/acumulación|stack/gi, "充能數")
+                             .replace(/más grandes|bigger/gi, "體積變大")
+                             .replace(/grosor|width/gi, "寬度")
+                             .replace(/Golpea en 360°|hits in 360°/gi, "360° 攻擊")
+                             .replace(/ y | and /gi, " 與 ");
+                             
+          return replaced !== t ? replaced : text;
+        };
 
-    // 5. 攔截 DOM 文字變化 (應用到升級卡片、設定選單、彈窗等)
-    window.addEventListener('DOMContentLoaded', () => {
-      const observer = new MutationObserver(mutations => {
-        mutations.forEach(m => {
-          if (m.type === 'characterData') {
-            let originalText = m.target.nodeValue;
-            if (originalText && originalText.trim()) {
-              let translated = translate(originalText.trim());
-              if (translated !== originalText.trim()) m.target.nodeValue = translated;
-            }
-          } else if (m.type === 'childList') {
-            m.addedNodes.forEach(node => {
-              if (node.nodeType === 3) { // 純文字節點
-                let originalText = node.nodeValue;
-                if (originalText && originalText.trim()) {
-                  let translated = translate(originalText.trim());
-                  if (translated !== originalText.trim()) node.nodeValue = translated;
-                }
-              } else if (node.nodeType === 1 && !node.closest('script, style')) { // HTML 標籤
-                const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-                let n;
-                while (n = walker.nextNode()) {
-                  let originalText = n.nodeValue;
-                  if (originalText && originalText.trim()) {
-                    let translated = translate(originalText.trim());
-                    // 替換翻譯後的文字
-                    if (translated !== originalText.trim()) {
-                      n.nodeValue = translated;
-                    }
-                  }
+        // 4. 瀏覽器底層 API 攔截 (防禦 CreateTextNode 與 TextContent)
+        const originalCreateTextNode = document.createTextNode;
+        document.createTextNode = function(text) {
+          return originalCreateTextNode.call(document, translate(text));
+        };
+
+        const originalTextContent = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
+        if (originalTextContent) {
+          Object.defineProperty(Node.prototype, 'textContent', {
+            set: function(val) { originalTextContent.set.call(this, translate(val)); },
+            get: originalTextContent.get
+          });
+        }
+
+        const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+        CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+          return originalFillText.call(this, translate(text), x, y, maxWidth);
+        };
+        const originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+        CanvasRenderingContext2D.prototype.measureText = function(text) {
+          return originalMeasureText.call(this, translate(text));
+        };
+
+        // 5. 暴力高頻掃描 (專治 innerHTML 瞬間生成的升級卡片)
+        setInterval(() => {
+          // 專門針對升級卡片與介面容器進行掃描
+          document.querySelectorAll('#cards, .cards, .box, #menu-partner-info').forEach(container => {
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+            let node;
+            while (node = walker.nextNode()) {
+              if (node.nodeValue && node.nodeValue.trim()) {
+                let translated = translate(node.nodeValue);
+                if (translated !== node.nodeValue) {
+                  node.nodeValue = translated;
                 }
               }
-            });
-          }
-        });
-      });
-      // 監聽整個網頁的動態變化
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    });
-  }
+            }
+          });
+        }, 150); // 每 0.15 秒掃描一次，不影響效能但能瞬間翻譯
 </script>
 
   <meta name="description" content="Survive hordes of Pokémon with your partner in this free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and online co-op with friends. No downloads, no ads.">
