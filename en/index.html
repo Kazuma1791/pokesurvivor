@@ -1,56 +1,47 @@
 <!doctype html>
 <html lang="zh-HK">
 <head>
-  <script>
-    // 強制鎖定為原版預設，阻止內部替換字典
-    try { localStorage.setItem('ps.lang', 'es'); } catch (e) {}
-    document.documentElement.lang = 'es';
-  </script>
-  
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>PokéSurvivor – 寶可夢倖存者</title>
-  
-  <!-- 引入 Firebase SDK (Compat 版本) -->
+
+  <!-- 1. 引入 Firebase SDK (Compat 版本) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
+  <!-- 2. 注入並鎖定 Firebase 設定 -->
   <script>
-    // 綁定到遊戲核心的全域物件
     window.G = window.G || {};
-    window.G.FIREBASE_CONFIG = {
+    
+    const myFirebaseConfig = {
       apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
       authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
       databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "pokemonsurvivor-e89a5",
-      storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
+      storageBucket: "pokemonsurvivor-e89a5.firebasedatabase.app",
       messagingSenderId: "693180646327",
       appId: "1:693180646327:web:f706004dea2a00124dde32"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(window.G.FIREBASE_CONFIG);
-    }
-  </script>
-    // 綁定到遊戲核心識別的全域物件 window.G
-    window.G = window.G || {};
-    window.G.FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
-      authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
-      databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "pokemonsurvivor-e89a5",
-      storageBucket: "pokemonsurvivor-e89a5.firebasestorage.app",
-      messagingSenderId: "693180646327",
-      appId: "1:693180646327:web:f706004dea2a00124dde32"
-    };
+    // 使用 Object.defineProperty 鎖死，防止 app.min.js 將其覆蓋為 null
+    Object.defineProperty(window.G, 'FIREBASE_CONFIG', {
+      get: function() { return myFirebaseConfig; },
+      set: function(val) {
+        // 如果外部試圖設為 null 則忽略，確保設定永遠存在
+        if (val) Object.assign(myFirebaseConfig, val);
+      },
+      configurable: true,
+      enumerable: true
+    });
 
     // 初始化 Firebase
     if (!firebase.apps.length) {
-      firebase.initializeApp(window.G.FIREBASE_CONFIG);
+      firebase.initializeApp(myFirebaseConfig);
     }
   </script>
+  
 <meta charset="utf-8">
 <base href="../">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
