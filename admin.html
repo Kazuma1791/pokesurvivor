@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PokéSurvivor - GM 後台管理系統</title>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { background: #0a1430; color: white; font-family: sans-serif; padding: 20px; }
+    .box { background: #1a2a50; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334a80; }
+    input { padding: 5px; width: 80px; border-radius: 4px; border: none; }
+    button { padding: 6px 12px; background: #ffd700; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
+    button:hover { background: #ffea00; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🛠️ PokéSurvivor GM 後台</h1>
+    <p id="status">正在檢查登入狀態...</p>
+    <button id="btn-login" style="display:none;" onclick="login()">使用 GM 帳號登入</button>
+  </div>
+
+  <div class="box" id="panel" style="display:none;">
+    <h2>玩家列表</h2>
+    <button onclick="loadPlayers()">🔄 重新整理列表</button>
+    <table>
+      <thead>
+        <tr>
+          <th>暱稱</th>
+          <th>金幣</th>
+          <th>單抽券 (t1)</th>
+          <th>神獸十連券 (t10)</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="player-list"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // 1. 填入你的 Firebase 設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E",
+      authDomain: "pokemonsurvivor-e89a5.firebaseapp.com",
+      databaseURL: "https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "pokemonsurvivor-e89a5",
+      storageBucket: "pokemonsurvivor-e89a5.firebasedatabase.app",
+      messagingSenderId: "693180646327",
+      appId: "1:693180646327:web:f706004dea2a00124dde32"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 登入檢查
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('status').innerText = `已登入為 GM: ${user.email}`;
+        document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('panel').style.display = 'block';
+        loadPlayers();
+      } else {
+        document.getElementById('status').innerText = "請先登入具備最高權限的 GM 帳號";
+        document.getElementById('btn-login').style.display = 'inline-block';
+        document.getElementById('panel').style.display = 'none';
+      }
+    });
+
+    function login() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider);
+    }
+
+    // 載入所有玩家存檔
+    async function loadPlayers() {
+      const tbody = document.getElementById('player-list');
+      tbody.innerHTML = "<tr><td colspan='5'>讀取中...</td></tr>";
+      try {
+        const snapshot = await db.collection('saves').get();
+        tbody.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data().save;
+          if (!data) return;
+          
+          const uid = doc.id;
+          const name = data.name || "未命名";
+          const coins = data.coins || 0;
+          const t1 = (data.tickets && data.tickets.t1) || 0;
+          const t10 = (data.tickets && data.tickets.t10) || 0;
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><b>${name}</b><br><small style="color:#aaa">${uid.slice(0,8)}...</small></td>
+            <td><input id="coin_${uid}" type="number" value="${coins}"></td>
+            <td><input id="t1_${uid}" type="number" value="${t1}"></td>
+            <td><input id="t10_${uid}" type="number" value="${t10}"></td>
+            <td><button onclick="updatePlayer('${uid}')">💾 儲存修改</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        alert("讀取失敗，請確認你的 UID 是否已加入 Firestore Rules 權限中！\n" + err.message);
+      }
+    }
+
+    // 修改特定玩家資料
+    async function updatePlayer(uid) {
+      const newCoins = parseInt(document.getElementById(`coin_${uid}`).value) || 0;
+      const newT1 = parseInt(document.getElementById(`t1_${uid}`).value) || 0;
+      const newT10 = parseInt(document.getElementById(`t10_${uid}`).value) || 0;
+
+      try {
+        // 使用點記法 (dot notation) 只更新特定欄位，不覆蓋整個存檔
+        await db.collection('saves').doc(uid).update({
+          "save.coins": newCoins,
+          "save.tickets.t1": newT1,
+          "save.tickets.t10": newT10
+        });
+        alert("修改成功！該玩家重新整理遊戲後即可看到新資源。");
+      } catch (err) {
+        alert("修改失敗：" + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
