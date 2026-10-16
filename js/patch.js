@@ -1,9 +1,7 @@
 (() => {
   'use strict';
-  const gameHost = ['pokesurvivor.com', 'www.pokesurvivor.com'].includes(location.hostname);
-  const guideHost = ['pokesurvivor.org', 'www.pokesurvivor.org'].includes(location.hostname);
-  if (!(gameHost && /^\/(?:index\.html|en\/(?:index\.html)?)?$/.test(location.pathname)) &&
-      !(guideHost && /^\/(?:index\.html|play(?:\/(?:index\.html)?)?)?$/.test(location.pathname))) return;
+  const gameHost = true;
+  const guideHost = false;
   const marker = Symbol.for('pokesurvivor.zhHant.displayPatch');
   if (window[marker]) return;
   window[marker] = true;
