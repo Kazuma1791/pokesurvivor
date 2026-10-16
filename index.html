@@ -46,143 +46,6 @@
     }
 
     <!-- 語言判定與繁中動態翻譯字典 -->
-<script>
-  // 1. 讀取玩家在設定中選擇的語言，預設為繁體中文 'zh'
-  let savedLang = localStorage.getItem('ps.lang');
-  if (!savedLang) {
-    savedLang = 'zh';
-    try { localStorage.setItem('ps.lang', 'zh'); } catch(e){}
-  }
-
-  // 如果選擇的是英文，直接讓遊戲使用原生英文環境，不啟動翻譯字典
-  if (savedLang === 'en') {
-    document.documentElement.lang = 'en';
-  } else {
-    // 若為中文，先設定為 'es' 騙過引擎不自動轉英文
-    document.documentElement.lang = 'es';
-
-    // 2. 繁體中文翻譯字典（英/西雙語擴充版）
-        const zhDict = {
-          // 屬性
-          "Acero":"鋼", "Steel":"鋼", "Agua":"水", "Water":"水", "Bicho":"蟲", "Bug":"蟲", 
-          "Dragón":"龍", "Dragon":"龍", "Eléctrico":"電", "Electric":"電", "Fantasma":"幽靈", "Ghost":"幽靈", 
-          "Fuego":"火", "Fire":"火", "Hada":"妖精", "Fairy":"妖精", "Hielo":"冰", "Ice":"冰", 
-          "Lucha":"格鬥", "Fighting":"格鬥", "Planta":"草", "Grass":"草", "Psíquico":"超能力", "Psychic":"超能力", 
-          "Roca":"岩石", "Rock":"岩石", "Siniestro":"惡", "Dark":"惡", "Tierra":"地面", "Ground":"地面", 
-          "Veneno":"毒", "Poison":"毒", "Volador":"飛行", "Flying":"飛行", "Normal": "一般",
-
-          // 招式名稱 (新增截圖中的招式)
-          "Quick Attack": "電光一閃",
-          "Dragon Rage": "龍之怒",
-          "Reflexes": "反射 (冷卻)",
-          "Meteor Mash": "彗星拳", "Swords Dance": "劍舞", "Dragon Dance": "龍之舞",
-          "Lanzallamas":"噴射火焰", "Flamethrower": "噴射火焰", "Thunderbolt":"十萬伏特", "Earthquake":"地震", 
-          "Hydro Pump":"水炮", 
-
-          // 招式描述 (新增截圖中的完整句子)
-          "You dash at the enemy like lightning and hit everything on the way.": "如閃電般衝向敵人，擊中沿途的一切。",
-          "Draconic flames in a straight line.": "直線發射的龍之烈焰。",
-          "-8% cooldown on every move.": "-8% 所有招式冷卻時間",
-          "Two steel meteors that crush where they land.": "召喚兩顆墜落的鋼鐵隕石粉碎敵人。",
-          "Deals no damage: builds ATTACK while active.": "無傷害：發動期間持續提升攻擊力。",
-          "Deals no damage: builds ATTACK faster than Swords Dance.": "無傷害：比劍舞更快提升攻擊力。",
-
-          // 基礎介面
-          "Vigor":"活力 (HP)", "Potencia":"力量 (攻擊)", "Carrera":"衝刺 (速度)", 
-          "Coraza":"裝甲 (減傷)", "Síntesis":"光合作用 (回血)", 
-          "Imán":"磁鐵 (拾取)", "Aprendizaje":"學習 (經驗)",
-          "Ataque":"攻擊", "Vida":"生命", "Velocidad":"速度", "Nv.":"Lv.", "Nivel":"等級", "Level":"等級",
-          "Elige una recompensa ·": "選擇一項升級獎勵 ·", "Choose a reward ·": "選擇一項升級獎勵 ·",
-          "Elige tu carta": "選擇你的卡片", "Choose your card": "選擇你的卡片",
-          "Mejora": "能力強化", "Upgrade": "能力強化", 
-          "EVOLUCIÓN": "招式進化！", "EVOLUTION": "招式進化！",
-          "Evoluciona": "招式進化", "Evolves": "招式進化",
-          "¡Un objeto!": "獲得攜帶道具！", "An item!": "獲得攜帶道具！",
-          "¡Vínculo!":"招式牽絆融合！", "Pausa":"遊戲暫停", "Continuar":"繼續遊戲", 
-          "Abandonar run":"放棄本局", "Volver al menú":"返回主選單",
-          "Misiones":"任務", "Logros":"成就", "Perfil":"個人檔案", "Diarias":"每日任務", 
-          "Semanales":"每週任務", "Recoger":"領取", "Equipar":"裝備", "Volver":"返回"
-        };
-    
-    // 3. 強化版動態翻譯邏輯（自動過濾隱藏空白與換行）
-        const translate = (text) => {
-          if (typeof text !== 'string') return text;
-          
-          // 清除多餘的隱藏空白、換行，將文字標準化
-          let t = text.trim().replace(/\s+/g, ' ');
-          if (!t) return text;
-          
-          if (zhDict[t]) return zhDict[t];
-          
-          let lvlMatch = t.match(/^(¡Nivel|Level)\s+(\d+)!?$/i);
-          if (lvlMatch) return `等級提升！ Lv.${lvlMatch[2]}`;
-
-          let newMatch = t.match(/^(Nuevo|New)\s*·\s*(.*)$/i);
-          if (newMatch) {
-             let skillName = zhDict[newMatch[2]] || newMatch[2];
-             return `新學習 · ${skillName}`;
-          }
-
-          let replaced = t;
-          replaced = replaced.replace(/daño|damage/gi, "傷害")
-                             .replace(/recarga|cooldown/gi, "冷卻")
-                             .replace(/alcance|range/gi, "範圍")
-                             .replace(/radio|radius/gi, "半徑")
-                             .replace(/proyectiles|proyectil|projectiles|projectile/gi, "投射物")
-                             .replace(/perforación|pierce/gi, "穿透")
-                             .replace(/duración|duration/gi, "持續時間")
-                             .replace(/orbes|orbe|orbs|orb/gi, "環繞球")
-                             .replace(/potencia|power/gi, "威力")
-                             .replace(/acumulación máxima|max stack/gi, "最大充能數")
-                             .replace(/acumulación|stack/gi, "充能數")
-                             .replace(/más grandes|bigger/gi, "體積變大")
-                             .replace(/grosor|width/gi, "寬度")
-                             .replace(/Golpea en 360°|hits in 360°/gi, "360° 攻擊")
-                             .replace(/ y | and /gi, " 與 ");
-                             
-          return replaced !== t ? replaced : text;
-        };
-
-        // 4. 瀏覽器底層 API 攔截 (防禦 CreateTextNode 與 TextContent)
-        const originalCreateTextNode = document.createTextNode;
-        document.createTextNode = function(text) {
-          return originalCreateTextNode.call(document, translate(text));
-        };
-
-        const originalTextContent = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
-        if (originalTextContent) {
-          Object.defineProperty(Node.prototype, 'textContent', {
-            set: function(val) { originalTextContent.set.call(this, translate(val)); },
-            get: originalTextContent.get
-          });
-        }
-
-        const originalFillText = CanvasRenderingContext2D.prototype.fillText;
-        CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-          return originalFillText.call(this, translate(text), x, y, maxWidth);
-        };
-        const originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
-        CanvasRenderingContext2D.prototype.measureText = function(text) {
-          return originalMeasureText.call(this, translate(text));
-        };
-
-        // 5. 暴力高頻掃描 (專治 innerHTML 瞬間生成的升級卡片)
-        setInterval(() => {
-          // 專門針對升級卡片與介面容器進行掃描
-          document.querySelectorAll('#cards, .cards, .box, #menu-partner-info').forEach(container => {
-            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-            let node;
-            while (node = walker.nextNode()) {
-              if (node.nodeValue && node.nodeValue.trim()) {
-                let translated = translate(node.nodeValue);
-                if (translated !== node.nodeValue) {
-                  node.nodeValue = translated;
-                }
-              }
-            }
-          });
-        }, 150); // 每 0.15 秒掃描一次，不影響效能但能瞬間翻譯
-</script>
 
   <meta name="description" content="Survive hordes of Pokémon with your partner in this free fan game for browser and mobile: 966 Pokémon, shinies, legendaries and online co-op with friends. No downloads, no ads.">
   <link rel="canonical" href="https://pokesurvivor.com/en/">
@@ -615,7 +478,8 @@
 </div>
 <!-- ======================================================= -->
 
-<!-- 順便把版號改成 new3 強制破除瀏覽器快取 -->
-<script defer src="js/app.min.js?v=new4"></script>
+<!-- 先載入翻譯補丁，再啟動遊戲 -->
+<script src="js/patch.js?v=1"></script>
+<script defer src="js/app.min.js?v=new5"></script>
 </body>
 </html>
