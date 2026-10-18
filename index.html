@@ -44,6 +44,7 @@
     if (!firebase.apps.length) {
       firebase.initializeApp(myFirebaseConfig);
     }
+  </script> <!-- 🔴 加上這行閉合標籤 -->
 
     <!-- 語言判定與繁中動態翻譯字典 -->
 
@@ -479,7 +480,7 @@
 <!-- ======================================================= -->
 
 <!-- 先載入翻譯補丁，再啟動遊戲 -->
-<script src="js/patch.js?v=1"></script>
+<script src="js/patch.js?v=2"></script>
 <script defer src="js/app.min.js?v=new5"></script>
 </body>
 </html>
