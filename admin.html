@@ -117,10 +117,10 @@
         await db.collection('saves').doc(uid).update({
           "save.coins": newCoins,
           "save.tickets.t1": newT1,
-          "save.tickets.t10": newT10
+          "save.tickets.t10": newT10,  // <--- 這裡一定要加上逗號！
           "updatedAt": firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("修改成功！該玩家重新整理遊戲後即可看到新資源。");
+        alert("修改成功！該玩家重新啟動遊戲後即可收到新資源。");
       } catch (err) {
         alert("修改失敗：" + err.message);
       }
