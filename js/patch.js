@@ -3835,31 +3835,6 @@ const initRealtimeSync = () => {
       const db = firebase.firestore();
       console.log("✅ GM 即時同步已啟動，正在監聽玩家 UID:", user.uid);
       
-      // 【終極防禦】：攔截底層寫入 API，準備沒收遊戲引擎的存檔能力
-      window.blockGameSave = false;
-      const docProto = Object.getPrototypeOf(db.collection('saves').doc('dummy'));
-      
-      if (!docProto._isHooked) {
-        const origSet = docProto.set;
-        docProto.set = function(...args) {
-          if (window.blockGameSave) {
-            console.log("🛡️ 已成功擋下遊戲引擎的「死前舊存檔」上傳 (set)！");
-            return Promise.resolve(); // 假裝存檔成功，但其實不寫入資料庫
-          }
-          return origSet.apply(this, args);
-        };
-
-        const origUpdate = docProto.update;
-        docProto.update = function(...args) {
-          if (window.blockGameSave) {
-            console.log("🛡️ 已成功擋下遊戲引擎的「死前舊存檔」上傳 (update)！");
-            return Promise.resolve();
-          }
-          return origUpdate.apply(this, args);
-        };
-        docProto._isHooked = true;
-      }
-
       let lastCoins = undefined; 
 
       db.collection('saves').doc(user.uid).onSnapshot(doc => {
@@ -3867,34 +3842,62 @@ const initRealtimeSync = () => {
         const serverData = doc.data().save;
         if (!serverData) return;
 
-        // 1. 如果這是遊戲「自己」觸發的本地存檔（例如打怪賺錢），只記錄新數字，不打斷玩家
+        // 玩家自己打怪賺錢的本地寫入，忽略不處理
         if (doc.metadata.hasPendingWrites) {
           lastCoins = serverData.coins;
           return;
         }
 
-        // 2. 首次進遊戲，安靜記錄
+        // 首次進遊戲，安靜記錄
         if (lastCoins === undefined) {
           lastCoins = serverData.coins;
           console.log("📌 首次記錄金幣：", lastCoins);
           return;
         }
 
-        // 3. 如果數字不一樣，且不是本地存檔，代表 100% 是 GM 從後台空投的！
+        // 數字發生來自伺服器的改變 (100% 是 GM 後台修改)
         if (serverData.coins !== lastCoins) {
           console.log(`💰 偵測到 GM 遠端修改！從 ${lastCoins} 變成 ${serverData.coins}`);
           
-          // 【發動絕對防禦】：立刻沒收遊戲引擎的存檔權限，防止重整時被覆蓋舊數字！
-          window.blockGameSave = true;
-          
+          // 【發動 EMP 癱瘓攻擊】：徹底摧毀遊戲引擎的存檔反撲能力
+
+          // 1. 癱瘓 Firebase 的網路連線，讓舊存檔立刻傳不出去
+          try { db.disableNetwork(); } catch(e) {}
+
+          // 2. 駭入 Local Storage：把本地暫存裡的舊金幣，偷偷換成 GM 發放的新金幣
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              let key = localStorage.key(i);
+              let val = localStorage.getItem(key);
+              if (val && val.includes('coins')) {
+                let obj = JSON.parse(val);
+                // 竄改本地快取
+                if (obj && obj.save && obj.save.coins !== undefined) {
+                  obj.save.coins = serverData.coins;
+                  localStorage.setItem(key, JSON.stringify(obj));
+                  console.log("💉 已成功竄改本地快取金幣為:", serverData.coins);
+                }
+              }
+            }
+            
+            // 鎖死 localStorage 的寫入功能，不准遊戲再存舊檔
+            const origSetItem = localStorage.setItem;
+            localStorage.setItem = function(k, v) {
+              if (k.includes('save') || v.includes('coins')) return; 
+              origSetItem.apply(this, arguments);
+            };
+          } catch(e) {}
+
+          // 3. 顯示黑幕，擋住玩家操作
           const overlay = document.createElement('div');
           overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);color:#fff;z-index:999999;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;text-align:center;';
-          overlay.innerHTML = `✨ GM 已從後台發放資源！<br>最新金幣：${serverData.coins}<br><br>正在同步最新存檔...`;
+          overlay.innerHTML = `✨ GM 已從後台發放資源！<br>最新金幣：${serverData.coins}<br><br>正在強制同步最新存檔...`;
           document.body.appendChild(overlay);
 
+          // 4. 趁網路與暫存都癱瘓的狀態，立刻重整 (縮短為 0.5 秒防夜長夢多)
           setTimeout(() => {
             window.location.reload();
-          }, 1500);
+          }, 500);
         }
 
         lastCoins = serverData.coins;
