@@ -1,19 +1,57 @@
+// --- GM 資源領取按鈕 (強制清除 Firebase 快取並重整) ---
 (function() {
-  let isBooting = true;
-  // 開機 5 秒後自動解除攔截，確保遊戲正常遊玩與存檔不受影響
-  setTimeout(() => { isBooting = false; }, 5000); 
+  const initGMButton = () => {
+    if (document.getElementById('gm-sync-btn')) return; // 避免重複生成
 
-  const origGetItem = localStorage.getItem;
-  localStorage.getItem = function(key) {
-    let val = origGetItem.apply(this, arguments);
-    // 如果在開機階段，且抓取的資料是遊戲存檔（裡面有 coins）
-    if (isBooting && typeof val === 'string' && val.includes('"coins"')) {
-      console.log("🛡️ [GM防護] 攔截本機舊存檔，強制遊戲向雲端請求最新資料！");
-      return null; // 假裝本機沒有存檔，強迫它去 Firebase 拿！
-    }
-    return val;
+    const btn = document.createElement('button');
+    btn.id = 'gm-sync-btn';
+    btn.innerHTML = '🔄 領取 GM 資源';
+    btn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999999; padding:10px 20px; background:#ff4757; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-size:16px; transition: 0.2s;';
+    
+    // 滑鼠懸停效果
+    btn.onmouseover = () => btn.style.background = '#ff6b81';
+    btn.onmouseout = () => btn.style.background = '#ff4757';
+
+    btn.onclick = async () => {
+      const confirmSync = confirm("✨ 即將從雲端同步 GM 發放的最新資源！\n\n注意：這將會清除本地快取並重新載入遊戲。確定要同步嗎？");
+      if (!confirmSync) return;
+
+      btn.innerHTML = '⏳ 資源同步中...';
+      btn.style.background = '#576574';
+      btn.disabled = true;
+      
+      // 1. 清除一般 LocalStorage
+      localStorage.clear();
+
+      // 2. 核彈級清除 IndexedDB (摧毀 Firebase 離線快取)
+      if (window.indexedDB && indexedDB.databases) {
+        try {
+          const dbs = await indexedDB.databases();
+          for (let db of dbs) {
+            indexedDB.deleteDatabase(db.name);
+          }
+        } catch(e) {
+          console.error("清除底層資料庫失敗:", e);
+        }
+      }
+
+      // 3. 強制刷新頁面，重新向 Firebase 索取最新資料
+      setTimeout(() => {
+        alert("✅ 快取已清除！點擊確定後將重新啟動遊戲載入資源。");
+        window.location.reload(true);
+      }, 500);
+    };
+
+    document.body.appendChild(btn);
   };
+
+  if (document.readyState === 'complete') {
+    initGMButton();
+  } else {
+    window.addEventListener('load', initGMButton);
+  }
 })();
+// -----------------------------------------------------------
 
 (() => {
   'use strict';
