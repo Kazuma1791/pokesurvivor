@@ -3826,55 +3826,57 @@
 // 確保 Firebase 載入後才啟動即時監聽
 const initRealtimeSync = () => {
   if (typeof firebase === 'undefined' || !firebase.auth) {
-    setTimeout(initRealtimeSync, 1000); // 尚未載入則每秒重試一次
+    setTimeout(initRealtimeSync, 1000);
     return;
   }
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
       const db = firebase.firestore();
-      console.log("GM 即時同步已啟動，正在監聽玩家 UID:", user.uid);
+      console.log("✅ GM 即時同步已啟動，正在監聽玩家 UID:", user.uid);
       
-      // 新增：用來記錄上一次的金幣數量，藉此判斷是否有異常大變動
       let lastCoins = undefined; 
 
       db.collection('saves').doc(user.uid).onSnapshot(doc => {
         if (doc.exists) {
-          const serverData = doc.data().save;
-          if (!serverData) return;
+          // 【關鍵追蹤】：把伺服器傳來的完整存檔印出來，看看裡面到底長怎樣！
+          console.log("🔥 觸發 onSnapshot！收到最新資料庫數據：", doc.data());
 
-          // 首次載入時，先記錄當下的金幣數量，不觸發重整
-          if (lastCoins === undefined) {
-            lastCoins = serverData.coins;
+          const serverData = doc.data().save;
+          if (!serverData) {
+            console.log("❌ 警告：這份存檔裡面沒有 'save' 欄位！");
             return;
           }
 
-          // 核心邏輯：如果伺服器金幣「突然變動」超過 1000 (代表 GM 在後台發放了資源)
-          if (Math.abs(serverData.coins - lastCoins) > 1000) {
-            // 1. 擋住畫面，防止玩家在這個瞬間操作導致存檔覆蓋
+          if (lastCoins === undefined) {
+            lastCoins = serverData.coins;
+            console.log("📌 首次記錄金幣：", lastCoins);
+            return;
+          }
+
+          // 取消 1000 門檻：只要數字不一樣，直接發動空投重整！
+          if (serverData.coins !== lastCoins) {
+            console.log(`💰 金幣發生變化！從 ${lastCoins} 變成 ${serverData.coins}，準備重整！`);
+            
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);color:#fff;z-index:999999;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;text-align:center;';
-            overlay.innerHTML = '✨ GM 已從後台發放資源！<br><br>正在同步最新存檔...';
+            overlay.innerHTML = `✨ GM 已從後台修改了數值！<br>最新金幣：${serverData.coins}<br><br>正在同步最新存檔...`;
             document.body.appendChild(overlay);
 
-            // 2. 延遲 1.5 秒後強制重新整理網頁，讓遊戲引擎親自從資料庫抓取最新數字
             setTimeout(() => {
               window.location.reload();
             }, 1500);
           }
 
-          // 更新記錄點
           lastCoins = serverData.coins;
-          console.log("收到 GM 後台的即時更新數值：", serverData.coins);
         }
       }, err => {
-        console.error("即時監聽發生錯誤：", err);
+        console.error("❌ 即時監聽發生錯誤：", err);
       });
     }
   });
 };
 
-// 頁面載入後自動執行
 if (document.readyState === 'complete') {
   initRealtimeSync();
 } else {
