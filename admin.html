@@ -118,6 +118,7 @@
           "save.coins": newCoins,
           "save.tickets.t1": newT1,
           "save.tickets.t10": newT10
+          "updatedAt": firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("修改成功！該玩家重新整理遊戲後即可看到新資源。");
       } catch (err) {
