@@ -3822,3 +3822,36 @@
     try { const origin = new URL(document.referrer).origin; if (guideOrigins.includes(origin)) announceReady(origin); } catch {}
   }
 })();
+
+// 確保 Firebase 已經初始化，並且玩家已登入
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    const db = firebase.firestore();
+    
+    // 即時監聽當前玩家的存檔變化 (onSnapshot)
+    db.collection('saves').doc(user.uid).onSnapshot(doc => {
+      if (doc.exists) {
+        const serverData = doc.data().save;
+        if (!serverData) return;
+
+        // 1. 即時更新全域變數中的金幣與扭蛋券（確保遊戲內部資料同步）
+        if (window.playerSave && window.playerSave.coins !== undefined) {
+          window.playerSave.coins = serverData.coins || 0;
+          if (serverData.tickets) {
+            window.playerSave.tickets = serverData.tickets;
+          }
+        }
+
+        // 2. 如果畫面上剛好有顯示金幣或扭蛋券的 DOM 元素，立即更新其文字
+        const coinUI = document.getElementById('coin-display') || document.querySelector('.coin-counter');
+        if (coinUI && serverData.coins !== undefined) {
+          coinUI.innerText = serverData.coins;
+        }
+
+        console.h("GM 後台數值已即時同步更新！");
+      }
+    }, error => {
+      console.error("即時監聽存檔失敗: ", error);
+    });
+  }
+});
