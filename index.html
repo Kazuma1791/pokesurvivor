@@ -80,8 +80,24 @@
   <script>window.PS_PAGES = true;</script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/style.css">
+  <!-- 原本的樣式表 -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- ▼▼▼ 加上這段強制解鎖直式遊玩的魔法 ▼▼▼ -->
+  <style>
+    /* 強制隱藏「請旋轉手機」的提示幕 */
+    #rotate {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: -999 !important;
+    }
+  </style>
+  <!-- ▲▲▲ 魔法結束 ▲▲▲ -->
+
 </head>
 <body>
+
 
 <canvas id="game"></canvas>
 <div id="rotate" class="hidden"><div class="box center"><div id="rotate-ico"></div><h2>Gira el móvil</h2><p class="sub">PokéSurvivor se juega en horizontal.</p></div></div>
