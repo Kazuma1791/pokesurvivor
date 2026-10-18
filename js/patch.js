@@ -6,12 +6,14 @@
     const btn = document.createElement('button');
     btn.id = 'gm-sync-btn';
     btn.innerHTML = '🔄 領取 GM 資源';
+    // 設定按鈕樣式，讓它固定在畫面左上角
     btn.style.cssText = 'position:fixed; top:15px; left:15px; z-index:999999; padding:10px 20px; background:#ff4757; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-size:16px; transition: 0.2s;';
     
     // 滑鼠懸停效果
     btn.onmouseover = () => btn.style.background = '#ff6b81';
     btn.onmouseout = () => btn.style.background = '#ff4757';
 
+    // 點擊按鈕的觸發事件
     btn.onclick = async () => {
       const confirmSync = confirm("✨ 即將從雲端同步 GM 發放的最新資源！\n\n注意：這將會清除本地快取並重新載入遊戲。確定要同步嗎？");
       if (!confirmSync) return;
@@ -42,9 +44,11 @@
       }, 500);
     };
 
+    // 將按鈕加入畫面
     document.body.appendChild(btn);
   };
 
+  // 確保網頁載入完成後才生成按鈕
   if (document.readyState === 'complete') {
     initGMButton();
   } else {
@@ -52,6 +56,10 @@
   }
 })();
 // -----------------------------------------------------------
+
+// ▼▼▼ 接下來是你原本的翻譯攔截代碼 ▼▼▼
+// const dictionary = { ... };
+// ... 等等
 
 (() => {
   'use strict';
