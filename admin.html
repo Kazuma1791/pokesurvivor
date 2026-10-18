@@ -113,14 +113,16 @@
       const newT10 = parseInt(document.getElementById(`t10_${uid}`).value) || 0;
 
       try {
-        // 使用點記法 (dot notation) 只更新特定欄位，不覆蓋整個存檔
         await db.collection('saves').doc(uid).update({
           "save.coins": newCoins,
           "save.tickets.t1": newT1,
-          "save.tickets.t10": newT10,  // <--- 這裡一定要加上逗號！
-          "updatedAt": firebase.firestore.FieldValue.serverTimestamp()
+          "save.tickets.t10": newT10,
+          
+          // 🔴 關鍵修改：強制覆寫成遊戲引擎看得懂的「純數字毫秒時間戳記」
+          // 並偷偷把時間往未來調 1 分鐘，確保絕對比它本機的存檔「還要新」！
+          "updatedAt": Date.now() + 60000 
         });
-        alert("修改成功！該玩家重新啟動遊戲後即可收到新資源。");
+        alert("修改成功！請玩家清除瀏覽器資料並重整遊戲即可看到新資源。");
       } catch (err) {
         alert("修改失敗：" + err.message);
       }
