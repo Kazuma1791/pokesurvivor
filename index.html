@@ -43,6 +43,30 @@
 
     if (!firebase.apps.length) {
       firebase.initializeApp(myFirebaseConfig);
+      if (!firebase.apps.length) {
+      firebase.initializeApp(myFirebaseConfig);
+    }
+
+    // --- 自動摧毀快取魔法，讓玩家永遠讀取最新雲端存檔 ---
+    try {
+      // 1. 攔截並癱瘓遊戲引擎試圖開啟的 Firebase IndexedDB 離線存檔
+      if (firebase.firestore && firebase.firestore.Firestore) {
+        firebase.firestore.Firestore.prototype.enablePersistence = function() {
+          console.log("🛡️ GM 系統已攔截底層快取，強制連線讀取最新數值！");
+          return Promise.resolve(); 
+        };
+      }
+      
+      // 2. 開機瞬間，自動秒殺瀏覽器 LocalStorage 裡的舊帳本
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        let key = localStorage.key(i);
+        let val = localStorage.getItem(key);
+        if (val && (val.includes('"coins"') || val.includes('"save"'))) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch(e) {}
+    // ------------------------------------------------
     }
   </script> <!-- 🔴 加上這行閉合標籤 -->
 
