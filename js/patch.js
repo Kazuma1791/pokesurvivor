@@ -1,3 +1,20 @@
+(function() {
+  let isBooting = true;
+  // 開機 5 秒後自動解除攔截，確保遊戲正常遊玩與存檔不受影響
+  setTimeout(() => { isBooting = false; }, 5000); 
+
+  const origGetItem = localStorage.getItem;
+  localStorage.getItem = function(key) {
+    let val = origGetItem.apply(this, arguments);
+    // 如果在開機階段，且抓取的資料是遊戲存檔（裡面有 coins）
+    if (isBooting && typeof val === 'string' && val.includes('"coins"')) {
+      console.log("🛡️ [GM防護] 攔截本機舊存檔，強制遊戲向雲端請求最新資料！");
+      return null; // 假裝本機沒有存檔，強迫它去 Firebase 拿！
+    }
+    return val;
+  };
+})();
+
 (() => {
   'use strict';
   const gameHost = true;
