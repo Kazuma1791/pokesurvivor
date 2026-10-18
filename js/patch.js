@@ -3835,43 +3835,69 @@ const initRealtimeSync = () => {
       const db = firebase.firestore();
       console.log("✅ GM 即時同步已啟動，正在監聽玩家 UID:", user.uid);
       
+      // 【終極防禦】：攔截底層寫入 API，準備沒收遊戲引擎的存檔能力
+      window.blockGameSave = false;
+      const docProto = Object.getPrototypeOf(db.collection('saves').doc('dummy'));
+      
+      if (!docProto._isHooked) {
+        const origSet = docProto.set;
+        docProto.set = function(...args) {
+          if (window.blockGameSave) {
+            console.log("🛡️ 已成功擋下遊戲引擎的「死前舊存檔」上傳 (set)！");
+            return Promise.resolve(); // 假裝存檔成功，但其實不寫入資料庫
+          }
+          return origSet.apply(this, args);
+        };
+
+        const origUpdate = docProto.update;
+        docProto.update = function(...args) {
+          if (window.blockGameSave) {
+            console.log("🛡️ 已成功擋下遊戲引擎的「死前舊存檔」上傳 (update)！");
+            return Promise.resolve();
+          }
+          return origUpdate.apply(this, args);
+        };
+        docProto._isHooked = true;
+      }
+
       let lastCoins = undefined; 
 
       db.collection('saves').doc(user.uid).onSnapshot(doc => {
-        if (doc.exists) {
-          // 【關鍵追蹤】：把伺服器傳來的完整存檔印出來，看看裡面到底長怎樣！
-          console.log("🔥 觸發 onSnapshot！收到最新資料庫數據：", doc.data());
+        if (!doc.exists) return;
+        const serverData = doc.data().save;
+        if (!serverData) return;
 
-          const serverData = doc.data().save;
-          if (!serverData) {
-            console.log("❌ 警告：這份存檔裡面沒有 'save' 欄位！");
-            return;
-          }
-
-          if (lastCoins === undefined) {
-            lastCoins = serverData.coins;
-            console.log("📌 首次記錄金幣：", lastCoins);
-            return;
-          }
-
-          // 取消 1000 門檻：只要數字不一樣，直接發動空投重整！
-          if (serverData.coins !== lastCoins) {
-            console.log(`💰 金幣發生變化！從 ${lastCoins} 變成 ${serverData.coins}，準備重整！`);
-            
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);color:#fff;z-index:999999;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;text-align:center;';
-            overlay.innerHTML = `✨ GM 已從後台修改了數值！<br>最新金幣：${serverData.coins}<br><br>正在同步最新存檔...`;
-            document.body.appendChild(overlay);
-
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          }
-
+        // 1. 如果這是遊戲「自己」觸發的本地存檔（例如打怪賺錢），只記錄新數字，不打斷玩家
+        if (doc.metadata.hasPendingWrites) {
           lastCoins = serverData.coins;
+          return;
         }
-      }, err => {
-        console.error("❌ 即時監聽發生錯誤：", err);
+
+        // 2. 首次進遊戲，安靜記錄
+        if (lastCoins === undefined) {
+          lastCoins = serverData.coins;
+          console.log("📌 首次記錄金幣：", lastCoins);
+          return;
+        }
+
+        // 3. 如果數字不一樣，且不是本地存檔，代表 100% 是 GM 從後台空投的！
+        if (serverData.coins !== lastCoins) {
+          console.log(`💰 偵測到 GM 遠端修改！從 ${lastCoins} 變成 ${serverData.coins}`);
+          
+          // 【發動絕對防禦】：立刻沒收遊戲引擎的存檔權限，防止重整時被覆蓋舊數字！
+          window.blockGameSave = true;
+          
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);color:#fff;z-index:999999;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;text-align:center;';
+          overlay.innerHTML = `✨ GM 已從後台發放資源！<br>最新金幣：${serverData.coins}<br><br>正在同步最新存檔...`;
+          document.body.appendChild(overlay);
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        }
+
+        lastCoins = serverData.coins;
       });
     }
   });
