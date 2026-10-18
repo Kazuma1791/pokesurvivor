@@ -3823,35 +3823,45 @@
   }
 })();
 
-// 確保 Firebase 已經初始化，並且玩家已登入
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    const db = firebase.firestore();
-    
-    // 即時監聽當前玩家的存檔變化 (onSnapshot)
-    db.collection('saves').doc(user.uid).onSnapshot(doc => {
-      if (doc.exists) {
-        const serverData = doc.data().save;
-        if (!serverData) return;
-
-        // 1. 即時更新全域變數中的金幣與扭蛋券（確保遊戲內部資料同步）
-        if (window.playerSave && window.playerSave.coins !== undefined) {
-          window.playerSave.coins = serverData.coins || 0;
-          if (serverData.tickets) {
-            window.playerSave.tickets = serverData.tickets;
-          }
-        }
-
-        // 2. 如果畫面上剛好有顯示金幣或扭蛋券的 DOM 元素，立即更新其文字
-        const coinUI = document.getElementById('coin-display') || document.querySelector('.coin-counter');
-        if (coinUI && serverData.coins !== undefined) {
-          coinUI.innerText = serverData.coins;
-        }
-
-        console.h("GM 後台數值已即時同步更新！");
-      }
-    }, error => {
-      console.error("即時監聽存檔失敗: ", error);
-    });
+// 確保 Firebase 載入後才啟動即時監聽
+const initRealtimeSync = () => {
+  if (typeof firebase === 'undefined' || !firebase.auth) {
+    setTimeout(initRealtimeSync, 1000); // 尚未載入則每秒重試一次
+    return;
   }
-});
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      const db = firebase.firestore();
+      console.log("GM 即時同步已啟動，正在監聽玩家 UID:", user.uid);
+      
+      db.collection('saves').doc(user.uid).onSnapshot(doc => {
+        if (doc.exists) {
+          const serverData = doc.data().save;
+          if (!serverData) return;
+
+          // 即時更新全域變數與畫面
+          if (window.playerSave && serverData.coins !== undefined) {
+            window.playerSave.coins = serverData.coins;
+          }
+          
+          // 如果畫面上剛好有金幣 DOM，順便強制更新
+          document.querySelectorAll('.coin-display, #coin-display').forEach(el => {
+            el.innerText = serverData.coins;
+          });
+
+          console.log("收到 GM 後台的即時更新數值：", serverData.coins);
+        }
+      }, err => {
+        console.error("即時監聽發生錯誤：", err);
+      });
+    }
+  });
+};
+
+// 頁面載入後自動執行
+if (document.readyState === 'complete') {
+  initRealtimeSync();
+} else {
+  window.addEventListener('load', initRealtimeSync);
+}
