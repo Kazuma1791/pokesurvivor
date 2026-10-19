@@ -198,13 +198,23 @@
         <!-- ▼▼▼ 單人難度選擇與出發按鈕 ▼▼▼ -->
         <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 12px; margin-bottom: 8px;">
             <select id="single-difficulty" class="field" style="width:100%; margin-bottom: 8px;">
-                <option value="easy">🟢 休閒觀光模式</option>
-                <option value="normal" selected>🟡 經典原味模式</option>
-                <option value="hard">🔴 地獄大亂鬥</option>
+                <option value="easy">🟢 休閒觀光模式 (新手友善)</option>
+                <option value="normal" selected>🟡 經典原味模式 (官方標準)</option>
+                <option value="hard">🔴 地獄大亂鬥 (高回報極限挑戰)</option>
             </select>
+            
+            <!-- 新增的單人難度說明文字框 -->
+            <div id="single-difficulty-desc" class="note" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 14px; text-align: left; line-height: 1.5;">
+                <b>🟡 經典原味模式</b><br>
+                • 怪物血量與速度：100%<br>
+                • 經驗與金幣掉落：100%<br>
+                • 說明：維持官方作者設計的標準平衡難度。
+            </div>
+
             <button class="menu-item play" data-go="play" style="width:100%; margin:0;">出發冒險<small>進入地下城挑戰怪潮</small></button>
         </div>
         <!-- ▲▲▲ 單人難度選擇與出發按鈕 ▲▲▲ -->
+
         <button class="menu-item" data-go="dex">寶可夢圖鑑<small id="menu-dex-count">查看收集進度</small></button>
         <button class="menu-item" data-go="upgrades">局外強化<small>提升每局基礎屬性</small></button>
         <button class="menu-item" data-go="gacha">轉蛋機<small>9 大世代 · 抽取寶可夢與色違</small></button>
@@ -573,36 +583,52 @@ document.getElementById('lobby-difficulty').addEventListener('change', function(
 // --- 讓遊戲引擎可以讀取的全局難度變數 ---
 window.gameDifficulty = 'normal'; 
 
+// 更新難度說明文字的共用函數
+function updateDifficultyText(value, descElement) {
+    if (!descElement) return;
+    if (value === 'easy') {
+        descElement.innerHTML = `<b>🟢 休閒觀光模式</b><br>
+        • 怪物血量：<span style="color:#47e066">降低 50% (極度脆弱)</span><br>
+        • 經驗掉落：<span style="color:#47e066">200% (光速升級)</span><br>
+        • 說明：無腦割草！適合想體驗滿等神仙大招或人數較少的玩家。`;
+    } else if (value === 'normal') {
+        descElement.innerHTML = `<b>🟡 經典原味模式</b><br>
+        • 怪物血量與速度：100%<br>
+        • 經驗與金幣掉落：100%<br>
+        • 說明：維持官方作者設計的標準平衡難度。`;
+    } else if (value === 'hard') {
+        descElement.innerHTML = `<b>🔴 地獄大亂鬥</b><br>
+        • Boss血量：<span style="color:#ff4757">動態增強 (100% + 每多1名玩家+30%)</span><br>
+        • 結算獎勵：<span style="color:#ffd23f">金幣與扭蛋券掉落 x 3 倍！</span><br>
+        • 說明：極度危險！怪物海與首領大幅強化，請與隊友互相掩護，撐過30分鐘即可全體暴富！`;
+    }
+}
+
 // 監聽【單人模式】難度切換
 const singleDiff = document.getElementById('single-difficulty');
+const lobbyDiff = document.getElementById('lobby-difficulty');
+
 if (singleDiff) {
     singleDiff.addEventListener('change', function() {
         window.gameDifficulty = this.value;
+        updateDifficultyText(this.value, document.getElementById('single-difficulty-desc'));
+        // 同步修改多人大廳的選項
+        if (lobbyDiff) { 
+            lobbyDiff.value = this.value; 
+            updateDifficultyText(this.value, document.getElementById('difficulty-desc')); 
+        }
     });
 }
 
 // 監聽【多人大廳】難度切換
-const lobbyDiff = document.getElementById('lobby-difficulty');
 if (lobbyDiff) {
     lobbyDiff.addEventListener('change', function() {
         window.gameDifficulty = this.value;
-        
-        const descBox = document.getElementById('difficulty-desc');
-        if (this.value === 'easy') {
-            descBox.innerHTML = `<b>🟢 休閒觀光模式</b><br>
-            • 怪物血量：<span style="color:#47e066">降低 50% (極度脆弱)</span><br>
-            • 經驗掉落：<span style="color:#47e066">200% (光速升級)</span><br>
-            • 說明：無腦割草！適合想體驗滿等神仙大招或人數較少的玩家。`;
-        } else if (this.value === 'normal') {
-            descBox.innerHTML = `<b>🟡 經典原味模式</b><br>
-            • 怪物血量與速度：100%<br>
-            • 經驗與金幣掉落：100%<br>
-            • 說明：維持官方作者設計的標準平衡難度。`;
-        } else if (this.value === 'hard') {
-            descBox.innerHTML = `<b>🔴 地獄大亂鬥</b><br>
-            • Boss血量：<span style="color:#ff4757">動態增強 (100% + 每多1名玩家+30%)</span><br>
-            • 結算獎勵：<span style="color:#ffd23f">金幣與扭蛋券掉落 x 3 倍！</span><br>
-            • 說明：極度危險！怪物海與首領大幅強化，請與隊友互相掩護，撐過30分鐘即可全體暴富！`;
+        updateDifficultyText(this.value, document.getElementById('difficulty-desc'));
+        // 同步修改單人模式的選項
+        if (singleDiff) { 
+            singleDiff.value = this.value; 
+            updateDifficultyText(this.value, document.getElementById('single-difficulty-desc')); 
         }
     });
 }
