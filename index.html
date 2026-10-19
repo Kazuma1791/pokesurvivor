@@ -95,6 +95,63 @@
   </style>
   <!-- ▲▲▲ 魔法結束 ▲▲▲ -->
 
+<style>
+/* ▼▼▼ 手機直向遊玩 UI 完美優化 (強制生效版) ▼▼▼ */
+@media screen and (orientation: portrait) and (max-width: 768px) {
+    /* 1. 升級卡片上下排列 */
+    #cards {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+        margin-top: 15% !important;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    #cards .card { width: 85% !important; min-height: 100px !important; }
+
+    /* 2. 隱藏只有電腦才需要的鍵盤提示 */
+    .key { display: none !important; }
+
+    /* 3. 遊戲內血條與經驗條微調 */
+    #hud { transform: scale(0.95); transform-origin: top center; }
+
+    /* 4. 主選單 (Menu) 介面完美置中與自適應 */
+    #scr-menu {
+        padding: 20px 15px !important;
+        overflow-y: auto !important;
+        justify-content: center !important;
+    }
+    
+    .menu-list {
+        width: 100% !important;
+        max-width: 350px !important;
+        margin: 0 auto !important; 
+    }
+    
+    .menu-item {
+        width: 100% !important;
+        min-height: 65px !important; 
+        padding: 10px 15px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        margin: 5px auto !important;
+    }
+
+    select.field {
+        min-height: 45px !important;
+        font-size: 15px !important;
+        width: 100% !important;
+    }
+
+    .about-logo, #scr-menu img {
+        max-width: 90% !important;
+        height: auto !important;
+        margin: 0 auto 20px auto !important;
+    }
+}
+/* ▲▲▲ 手機優化結束 ▲▲▲ */
+</style>
 </head>
 <body>
 
