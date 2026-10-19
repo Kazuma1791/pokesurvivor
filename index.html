@@ -635,62 +635,69 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* ▼▼▼ 手機直立：完美文字顯示與下半部佈局版 ▼▼▼ */
+/* ▼▼▼ 手機直立：極限縮小寶可夢 + 2x4 雙排網格選單完整顯示版 ▼▼▼ */
 @media screen and (orientation: portrait) {
-    /* 1. 主選單：允許自然滾動，絕對不卡死高度 */
+    /* 1. 主選單容器：完美容納所有內容，不超出螢幕 */
     body #scr-menu:not(.hidden) {
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important;
         overflow-y: auto !important;
-        /* 頂部保留適當空間，避開狀態列 */
-        padding: max(80px, env(safe-area-inset-top) + 30px) 15px 40px 15px !important;
+        padding: max(75px, env(safe-area-inset-top) + 25px) 12px 25px 12px !important;
         min-height: 100dvh !important;
         box-sizing: border-box !important;
     }
     
     body #scr-menu.hidden { display: none !important; }
 
-    /* 2. 標題與寶可夢適度縮小 */
+    /* 2. 標題與寶可夢精緻化縮小 */
     body .about-logo, body #scr-menu img {
-        max-width: 60% !important; 
-        margin: 0 auto 5px auto !important;
+        max-width: 50% !important; 
+        margin: 0 auto 2px auto !important;
     }
 
+    /* 將寶可夢展示框（耿鬼/炎兔兒）大幅縮小，釋放中間空間 */
     body #menu-char {
-        transform: scale(0.6) !important; 
+        transform: scale(0.45) !important; 
         transform-origin: top center !important;
-        margin: -5px auto -40px auto !important;
+        margin: -15px auto -55px auto !important;
+        max-height: 18vh !important;
     }
 
-    /* 3. 選單區塊：改用彈性撐開，絕不讓文字消失 */
+    /* 3. ★ 核心改造：2x4 雙排網格選單，完美展現所有按鈕 ★ */
     body .menu-list {
-        display: flex !important;
-        flex-direction: column !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 強制左右兩欄 */
+        gap: 8px !important; /* 按鈕間距縮小，更緊湊 */
         width: 100% !important;
-        max-width: 400px !important;
+        max-width: 420px !important;
         margin: 0 auto !important;
-        gap: 10px !important;
         position: relative !important;
     }
 
-    /* 4. 按鈕樣式：確保文字絕對看得見、自動換行且高度自適應 */
+    /* 讓難度選擇與「出發冒險」這個最大按鈕橫跨兩格 (佔滿整行) */
+    body .menu-list > div:first-child {
+        grid-column: span 2 !important; 
+    }
+
+    /* 4. 按鈕樣式優化：確保字體看得見、排版不跑位 */
     body .menu-item {
         height: auto !important;
-        min-height: 55px !important;
-        padding: 12px 10px !important;
+        min-height: 50px !important;
+        padding: 8px 6px !important;
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 16px !important;
+        text-align: center !important;
+        font-size: 14px !important;
         color: #fff !important;
         visibility: visible !important;
         opacity: 1 !important;
+        white-space: normal !important;
     }
 
-    /* 確保按鈕內部的文字與標籤完全顯現 */
     body .menu-item span, body .menu-item small, body .menu-item b {
         display: block !important;
         visibility: visible !important;
@@ -698,21 +705,24 @@ if (lobbyDiff) {
         color: inherit !important;
     }
 
-    /* 難度選單高度與字體修正 */
+    /* 難度選單完美橫跨兩格並適度縮高 */
     body select.field { 
-        height: 45px !important; 
-        font-size: 15px !important;
-        margin-bottom: 5px !important; 
+        grid-column: span 2 !important;
+        height: 42px !important; 
+        font-size: 14px !important;
+        margin-bottom: 2px !important; 
         color: #000 !important;
+        width: 100% !important;
     }
 
-    /* 5. 底部版權文字 */
+    /* 5. 底部版權文字：縮小並橫跨兩格置底 */
     body p[style*="font-size:10px"], body .legal {
-        margin-top: 20px !important;
-        font-size: 10px !important;
-        line-height: 1.4 !important;
+        margin-top: 10px !important;
+        font-size: 9px !important;
+        line-height: 1.2 !important;
         text-align: center !important;
-        opacity: 0.8 !important;
+        opacity: 0.7 !important;
+        grid-column: span 2 !important;
     }
 
     /* 6. 遊戲內升級卡片上下排 */
