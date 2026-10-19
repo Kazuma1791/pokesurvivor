@@ -661,13 +661,22 @@ if (lobbyDiff) {
         display: block;
     }
 
-    /* 3. ★ 核心修改：大幅縮小寶可夢展示框 (耿鬼) 並向上拉提 ★ */
+    /* 3. ★ 無敵暴君版：強制縮小寶可夢展示框，不准它撐大畫面 ★ */
     #menu-char {
-        transform: scale(0.65) !important; /* 縮小至原本的 65% */
+        transform: scale(0.65) !important;
         transform-origin: top center !important;
-        margin: -15px auto -60px auto !important; /* 用負數邊距大幅削減下方空白，把底層選單拉上來 */
+        margin: -15px auto -60px auto !important;
+        max-height: 25vh !important; /* 強制最高只能佔螢幕 25% */
+        overflow: visible !important;
     }
-
+    
+    /* 防禦遊戲底層 JS 偷偷放大圖片 */
+    #menu-char img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+  
     /* 4. 雙排網格選單：稍微縮減間距與高度 */
     .menu-list {
         position: relative !important;
