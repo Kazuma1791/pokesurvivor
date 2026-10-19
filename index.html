@@ -635,94 +635,94 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* ▼▼▼ 手機直立：極限縮小寶可夢 + 2x4 雙排網格選單完整顯示版 ▼▼▼ */
+/* ▼▼▼ 手機直立：方格放大與字體強制顯現版 ▼▼▼ */
 @media screen and (orientation: portrait) {
-    /* 1. 主選單容器：完美容納所有內容，不超出螢幕 */
+    /* 1. 主選單容器：確保能往下捲動，且有足夠上下空間 */
     body #scr-menu:not(.hidden) {
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important;
         overflow-y: auto !important;
-        padding: max(75px, env(safe-area-inset-top) + 25px) 12px 25px 12px !important;
+        padding: max(85px, env(safe-area-inset-top) + 30px) 15px 40px 15px !important;
         min-height: 100dvh !important;
         box-sizing: border-box !important;
     }
     
     body #scr-menu.hidden { display: none !important; }
 
-    /* 2. 標題與寶可夢精緻化縮小 */
+    /* 2. 標題與寶可夢精緻化 */
     body .about-logo, body #scr-menu img {
-        max-width: 50% !important; 
-        margin: 0 auto 2px auto !important;
+        max-width: 55% !important; 
+        margin: 0 auto 5px auto !important;
     }
 
-    /* 將寶可夢展示框（耿鬼/炎兔兒）大幅縮小，釋放中間空間 */
     body #menu-char {
-        transform: scale(0.45) !important; 
+        transform: scale(0.55) !important; 
         transform-origin: top center !important;
-        margin: -15px auto -55px auto !important;
-        max-height: 18vh !important;
+        margin: -5px auto -40px auto !important;
+        max-height: 20vh !important;
     }
 
-    /* 3. ★ 核心改造：2x4 雙排網格選單，完美展現所有按鈕 ★ */
+    /* 3. 選單列表容器：改回直向排列，但確保每個方格夠大 */
     body .menu-list {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important; /* 強制左右兩欄 */
-        gap: 8px !important; /* 按鈕間距縮小，更緊湊 */
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important; /* 方格之間的距離 */
         width: 100% !important;
-        max-width: 420px !important;
+        max-width: 400px !important;
         margin: 0 auto !important;
-        position: relative !important;
+        padding-bottom: 30px !important;
     }
 
-    /* 讓難度選擇與「出發冒險」這個最大按鈕橫跨兩格 (佔滿整行) */
-    body .menu-list > div:first-child {
-        grid-column: span 2 !important; 
-    }
-
-    /* 4. 按鈕樣式優化：確保字體看得見、排版不跑位 */
-    body .menu-item {
+    /* 4. ★ 核心解法：強制解放所有下方方格/按鈕的高度與字體大小 ★ */
+    body .menu-item, 
+    body .menu-list button, 
+    body .menu-list .btn,
+    body .menu-list > div {
         height: auto !important;
-        min-height: 50px !important;
-        padding: 8px 6px !important;
+        min-height: 60px !important; /* 方格高度加高，絕對不扁 */
+        padding: 12px 15px !important;
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
         text-align: center !important;
-        font-size: 14px !important;
-        color: #fff !important;
+        font-size: 16px !important; /* 字體放大，看得清清楚楚 */
+        color: #ffffff !important;
         visibility: visible !important;
         opacity: 1 !important;
-        white-space: normal !important;
+        box-sizing: border-box !important;
     }
 
-    body .menu-item span, body .menu-item small, body .menu-item b {
-        display: block !important;
+    /* 強制讓方格內部的文字、數字、圖示全部顯現 */
+    body .menu-item *, 
+    body .menu-list button *, 
+    body .menu-list .btn * {
         visibility: visible !important;
         opacity: 1 !important;
         color: inherit !important;
+        font-size: inherit !important;
     }
 
-    /* 難度選單完美橫跨兩格並適度縮高 */
+    /* 難度選擇下拉選單方格優化 */
     body select.field { 
-        grid-column: span 2 !important;
-        height: 42px !important; 
-        font-size: 14px !important;
-        margin-bottom: 2px !important; 
-        color: #000 !important;
+        height: 50px !important; 
+        font-size: 15px !important;
+        padding: 0 10px !important;
+        color: #000000 !important;
+        background-color: #ffffff !important;
         width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* 5. 底部版權文字：縮小並橫跨兩格置底 */
+    /* 5. 底部版權文字 */
     body p[style*="font-size:10px"], body .legal {
-        margin-top: 10px !important;
-        font-size: 9px !important;
-        line-height: 1.2 !important;
+        margin-top: 15px !important;
+        font-size: 10px !important;
+        line-height: 1.4 !important;
         text-align: center !important;
         opacity: 0.7 !important;
-        grid-column: span 2 !important;
     }
 
     /* 6. 遊戲內升級卡片上下排 */
