@@ -317,6 +317,22 @@
     <div id="lobby-members" class="lobby-members"></div>
     <h3 id="lobby-inv-title" style="margin:14px 0 6px">邀請好友</h3>
     <div id="lobby-invite" class="fr-list"></div>
+    
+    <!-- ▼▼▼ 新增的難度選擇區塊 ▼▼▼ -->
+    <h3 style="margin:14px 0 6px">挑戰難度</h3>
+    <select id="lobby-difficulty" class="field" style="width:100%; margin-bottom: 8px;">
+        <option value="easy">🟢 休閒觀光模式 (新手友善)</option>
+        <option value="normal" selected>🟡 經典原味模式 (官方標準)</option>
+        <option value="hard">🔴 地獄大亂鬥 (高回報極限挑戰)</option>
+    </select>
+    <div id="difficulty-desc" class="note" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 14px; text-align: left; line-height: 1.5;">
+        <b>🟡 經典原味模式</b><br>
+        • 怪物血量與速度：100%<br>
+        • 經驗與金幣掉落：100%<br>
+        • 說明：維持官方作者設計的標準平衡難度。
+    </div>
+    <!-- ▲▲▲ 新增的難度選擇區塊 ▲▲▲ -->
+
     <div class="row" style="margin-top:14px">
       <button id="lobby-start" class="btn gold grow">開始遊戲</button>
     </div>
