@@ -538,5 +538,27 @@
 <!-- 先載入翻譯補丁，再啟動遊戲 -->
 <script src="js/patch.js?v=2"></script>
 <script defer src="js/app.min.js?v=new5"></script>
+<script>
+// --- 難度選單動態說明文字切換 ---
+document.getElementById('lobby-difficulty').addEventListener('change', function() {
+    const descBox = document.getElementById('difficulty-desc');
+    if (this.value === 'easy') {
+        descBox.innerHTML = `<b>🟢 休閒觀光模式</b><br>
+        • 怪物血量：<span style="color:#47e066">降低 50% (極度脆弱)</span><br>
+        • 經驗掉落：<span style="color:#47e066">200% (光速升級)</span><br>
+        • 說明：無腦割草！適合想體驗滿等神仙大招或人數較少的玩家。`;
+    } else if (this.value === 'normal') {
+        descBox.innerHTML = `<b>🟡 經典原味模式</b><br>
+        • 怪物血量與速度：100%<br>
+        • 經驗與金幣掉落：100%<br>
+        • 說明：維持官方作者設計的標準平衡難度。`;
+    } else if (this.value === 'hard') {
+        descBox.innerHTML = `<b>🔴 地獄大亂鬥</b><br>
+        • Boss血量：<span style="color:#ff4757">動態增強 (100% + 每多1名玩家+30%)</span><br>
+        • 結算獎勵：<span style="color:#ffd23f">金幣與扭蛋券掉落 x 3 倍！</span><br>
+        • 說明：極度危險！怪物海與首領大幅強化，請與隊友互相掩護，撐過30分鐘即可全體暴富！`;
+    }
+});
+</script>
 </body>
 </html>
