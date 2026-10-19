@@ -635,62 +635,77 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* ▼▼▼ 絕對安全：手機直立專屬優化 (橫向絕對無效) ▼▼▼ */
+/* ▼▼▼ 手機直立：上下半部完美分割版 ▼▼▼ */
 @media screen and (orientation: portrait) {
-    /* 1. 遊戲選單：強制接管排版，解除擠壓 */
+    /* 1. 整個主選單佔滿螢幕，使用 dvh 避免被手機瀏覽器底部的網址列干擾 */
     body #scr-menu:not(.hidden) {
         display: flex !important;
         flex-direction: column !important;
-        justify-content: flex-start !important;
-        overflow-y: auto !important;
-        padding: 80px 15px 40px 15px !important;
-        height: 100vh !important;
+        justify-content: space-between !important; /* 讓內容上下推開 */
+        /* 頂部推高 100px 徹底避開最上方那排被切斷的按鈕 */
+        padding: max(100px, env(safe-area-inset-top) + 50px) 15px max(20px, env(safe-area-inset-bottom)) 15px !important;
+        height: 100dvh !important;
         box-sizing: border-box !important;
     }
     
     body #scr-menu.hidden { display: none !important; }
 
-    /* 2. 標題與寶可夢大幅縮小 */
+    /* 2. 標題縮小，讓出空間 */
     body .about-logo, body #scr-menu img {
-        max-width: 60% !important;
+        max-width: 55% !important; 
         margin: 0 auto 5px auto !important;
     }
 
+    /* 3. 寶可夢極限縮小至 50%，並用負邊距把下方的選單拉上來 */
     body #menu-char {
-        transform: scale(0.65) !important;
+        transform: scale(0.5) !important; 
         transform-origin: top center !important;
-        margin: -10px auto -50px auto !important;
-        max-height: 25vh !important;
+        margin: 0 auto -80px auto !important; 
+        max-height: 20vh !important;
     }
 
-    /* 3. 按鈕雙排網格 */
+    /* 4. ★ 核心修改：強制選單區塊佔用「下半部 50%」的空間 ★ */
     body .menu-list {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important; /* 選單內容從下半部的頂端開始排 */
+        height: 52vh !important; /* 強制劃分給下半部 */
+        overflow-y: auto !important; /* 如果未來新增按鈕，允許下半部獨立滑動 */
         width: 100% !important;
         max-width: 400px !important;
-        margin: 0 auto !important;
+        margin: auto auto 0 auto !important;
+        gap: 10px !important;
     }
-    
-    body .menu-list > div:first-child { grid-column: span 2 !important; }
 
+    /* 放寬選單按鈕的空間，不再擁擠 */
     body .menu-item {
         min-height: 55px !important;
-        padding: 5px !important;
-        white-space: normal !important;
+        padding: 10px !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important; /* 防止按鈕被壓扁 */
     }
     
-    body select.field { height: 40px !important; margin-bottom: 5px !important; }
-
-    /* 4. 版權文字縮小置底 */
-    body p[style*="font-size:10px"], body .legal {
-        margin-top: 15px !important;
-        font-size: 9px !important;
-        grid-column: span 2 !important;
+    body select.field { 
+        height: 45px !important; 
+        margin-bottom: 5px !important; 
+        flex-shrink: 0 !important;
     }
 
-    /* 5. 遊戲內升級卡片上下排 */
+    /* 5. 確保最上方的懸浮按鈕 (登出、設定等) 不會貼著螢幕頂端 */
+    body .btn[style*="top:"], body .hud-top {
+        margin-top: max(20px, env(safe-area-inset-top)) !important;
+    }
+
+    /* 6. 版權文字縮小置底 */
+    body p[style*="font-size:10px"], body .legal {
+        margin-top: 10px !important;
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+        opacity: 0.8 !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* 7. 遊戲內升級卡片上下排 */
     body #cards {
         flex-direction: column !important;
         margin-top: 15% !important;
