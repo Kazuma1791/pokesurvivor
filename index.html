@@ -195,7 +195,16 @@
   <div class="menu-right">
     <div class="box">
       <div class="menu-list">
-        <button class="menu-item play" data-go="play">出發冒險<small>進入地下城挑戰怪潮</small></button>
+        <!-- ▼▼▼ 單人難度選擇與出發按鈕 ▼▼▼ -->
+        <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 12px; margin-bottom: 8px;">
+            <select id="single-difficulty" class="field" style="width:100%; margin-bottom: 8px;">
+                <option value="easy">🟢 休閒觀光模式</option>
+                <option value="normal" selected>🟡 經典原味模式</option>
+                <option value="hard">🔴 地獄大亂鬥</option>
+            </select>
+            <button class="menu-item play" data-go="play" style="width:100%; margin:0;">出發冒險<small>進入地下城挑戰怪潮</small></button>
+        </div>
+        <!-- ▲▲▲ 單人難度選擇與出發按鈕 ▲▲▲ -->
         <button class="menu-item" data-go="dex">寶可夢圖鑑<small id="menu-dex-count">查看收集進度</small></button>
         <button class="menu-item" data-go="upgrades">局外強化<small>提升每局基礎屬性</small></button>
         <button class="menu-item" data-go="gacha">轉蛋機<small>9 大世代 · 抽取寶可夢與色違</small></button>
