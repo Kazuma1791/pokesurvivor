@@ -635,42 +635,69 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* 使用 max-aspect-ratio: 1/1，這代表「只要高度 > 寬度 (直立)」，就會強制觸發！橫向絕對不受影響 */
+/* ▼▼▼ 手機直立完美滾動版 ▼▼▼ */
 @media screen and (max-aspect-ratio: 1/1) {
-    /* 1. 主選單直立置中排版 */
+    /* 1. 解除主選單的強制置中擠壓，改為允許上下滑動 */
     #scr-menu {
-        padding: 5% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
+        display: block !important; 
+        overflow-y: auto !important;
+        padding: 80px 15px 40px 15px !important; /* 頂部推空 80px 避開圖示 */
+        height: 100vh !important;
+        box-sizing: border-box;
     }
+
+    /* 2. 稍微縮小 Logo 與中間的寶可夢框，騰出空間 */
+    .about-logo, #scr-menu img {
+        max-width: 80% !important;
+        margin: 0 auto 10px auto !important;
+        display: block;
+    }
+    #menu-char {
+        transform: scale(0.8);
+        transform-origin: top center;
+        margin: -10px auto -30px auto !important; /* 減少上下空白 */
+    }
+
+    /* 3. 按鈕列表：不再壓縮，自然排下來 */
     .menu-list {
-        width: 95% !important;
-        max-width: 400px !important;
+        position: relative !important;
         display: flex !important;
         flex-direction: column !important;
-    }
-    .menu-item, select.field {
         width: 100% !important;
-        min-height: 65px !important;
-        margin: 6px 0 !important;
-        font-size: 16px !important;
+        max-width: 350px !important;
+        margin: 0 auto !important;
+        gap: 12px !important; /* 按鈕之間的距離 */
+    }
+
+    /* 4. 讓按鈕高度彈性自適應，不再被壓扁 */
+    .menu-item {
+        height: auto !important;
+        min-height: 60px !important;
+        padding: 12px 10px !important;
+        white-space: normal !important; /* 允許文字自動換行 */
     }
     
-    /* 2. 升級卡片防擠壓 (強制上下排) */
+    /* 難度選單與外框優化 */
+    select.field {
+        height: 45px !important;
+        font-size: 15px !important;
+    }
+
+    /* 5. 處理底部版權文字，避免重疊 */
+    p[style*="font-size:10px"], .legal {
+        position: relative !important;
+        margin-top: 30px !important;
+        line-height: 1.5 !important;
+    }
+
+    /* 6. 升級卡片防擠壓 (保持上下排列) */
     #cards {
         flex-direction: column !important;
         margin-top: 15% !important;
         gap: 15px !important;
         align-items: center !important;
     }
-    #cards .card {
-        width: 85% !important;
-        min-height: 100px !important;
-    }
-    
-    /* 3. 隱藏多餘按鍵提示 */
+    #cards .card { width: 85% !important; min-height: 100px !important; }
     .key { display: none !important; }
 }
 </style>
