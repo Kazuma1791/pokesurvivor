@@ -635,100 +635,69 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* ▼▼▼ 手機直立：PWA全螢幕優化 + 寶可夢縮小版 ▼▼▼ */
-@media screen and (max-width: 900px) {
-    /* 1. 主選單容器：加入 env(safe-area-inset-top) 自動避開 iPhone 瀏海與狀態列 */
-    #scr-menu:not(.hidden) {
+/* ▼▼▼ 絕對安全：手機直立專屬優化 (橫向絕對無效) ▼▼▼ */
+@media screen and (orientation: portrait) {
+    /* 1. 遊戲選單：強制接管排版，解除擠壓 */
+    body #scr-menu:not(.hidden) {
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important;
         overflow-y: auto !important;
-        /* 頂部高度動態計算，確保不管有沒有瀏海都不會擋到頂部按鈕 */
-        padding: max(70px, env(safe-area-inset-top) + 50px) 15px 40px 15px !important;
+        padding: 80px 15px 40px 15px !important;
         height: 100vh !important;
-        box-sizing: border-box;
-    }
-
-    /* 選單隱藏防呆機制 */
-    #scr-menu.hidden {
-        display: none !important;
-    }
-
-    /* 2. Logo 縮小，節省上方空間 */
-    .about-logo, #scr-menu img {
-        max-width: 65% !important;
-        margin: 0 auto 5px auto !important;
-        display: block;
-    }
-
-    /* 3. ★ 無敵暴君版：強制縮小寶可夢展示框，不准它撐大畫面 ★ */
-    #menu-char {
-        transform: scale(0.65) !important;
-        transform-origin: top center !important;
-        margin: -15px auto -60px auto !important;
-        max-height: 25vh !important; /* 強制最高只能佔螢幕 25% */
-        overflow: visible !important;
+        box-sizing: border-box !important;
     }
     
-    /* 防禦遊戲底層 JS 偷偷放大圖片 */
-    #menu-char img {
-        max-width: 100% !important;
-        height: auto !important;
-        object-fit: contain !important;
+    body #scr-menu.hidden { display: none !important; }
+
+    /* 2. 標題與寶可夢大幅縮小 */
+    body .about-logo, body #scr-menu img {
+        max-width: 60% !important;
+        margin: 0 auto 5px auto !important;
     }
-  
-    /* 4. 雙排網格選單：稍微縮減間距與高度 */
-    .menu-list {
-        position: relative !important;
-        display: grid !important; 
+
+    body #menu-char {
+        transform: scale(0.65) !important;
+        transform-origin: top center !important;
+        margin: -10px auto -50px auto !important;
+        max-height: 25vh !important;
+    }
+
+    /* 3. 按鈕雙排網格 */
+    body .menu-list {
+        display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important; 
+        gap: 8px !important;
         width: 100% !important;
         max-width: 400px !important;
         margin: 0 auto !important;
     }
+    
+    body .menu-list > div:first-child { grid-column: span 2 !important; }
 
-    .menu-list > div:first-child {
-        grid-column: span 2 !important; 
-    }
-
-    .menu-item {
-        height: auto !important;
-        min-height: 55px !important; /* 稍微降高 */
-        padding: 8px 5px !important;
-        margin: 0 !important;
-        text-align: center !important;
+    body .menu-item {
+        min-height: 55px !important;
+        padding: 5px !important;
         white-space: normal !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
     }
+    
+    body select.field { height: 40px !important; margin-bottom: 5px !important; }
 
-    select.field {
-        height: 40px !important;
-        font-size: 14px !important;
-        margin-bottom: 5px !important;
-    }
-
-    /* 5. 底部版權文字：縮小字體並避免重疊 */
-    p[style*="font-size:10px"], .legal {
-        position: relative !important;
+    /* 4. 版權文字縮小置底 */
+    body p[style*="font-size:10px"], body .legal {
         margin-top: 15px !important;
-        line-height: 1.2 !important;
-        font-size: 9px !important; /* 字體變小，不干擾畫面 */
-        grid-column: span 2 !important; 
+        font-size: 9px !important;
+        grid-column: span 2 !important;
     }
 
-    /* 6. 升級卡片防擠壓 (保持上下排列) */
-    #cards {
+    /* 5. 遊戲內升級卡片上下排 */
+    body #cards {
         flex-direction: column !important;
         margin-top: 15% !important;
-        gap: 15px !important;
         align-items: center !important;
     }
-    #cards .card { width: 85% !important; min-height: 100px !important; }
-    .key { display: none !important; }
+    body #cards .card { width: 85% !important; min-height: 100px !important; }
+    body .key { display: none !important; }
 }
 </style>
 </body> <!-- 確保在 body 結束之前 -->
