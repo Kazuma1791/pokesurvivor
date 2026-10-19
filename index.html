@@ -637,13 +637,18 @@ if (lobbyDiff) {
 <style>
 /* ▼▼▼ 手機直立：頂部優化 + 雙排網格選單版 ▼▼▼ */
 @media screen and (max-aspect-ratio: 1/1) {
-    /* 1. 主選單容器：大幅增加頂部空間 (110px)，徹底避開最上面的設定、全螢幕等懸浮圖示 */
-    #scr-menu {
+    /* 1. 主選單容器：只在「非隱藏狀態」下強制排版，避免卡在遊戲畫面上 */
+    #scr-menu:not(.hidden) {
         display: block !important; 
         overflow-y: auto !important;
         padding: 110px 15px 40px 15px !important; 
         height: 100vh !important;
         box-sizing: border-box;
+    }
+
+    /* 新增：確保遊戲切換畫面時，選單絕對會消失 */
+    #scr-menu.hidden {
+        display: none !important;
     }
 
     /* 2. Logo 尺寸微調，讓它在標題下方顯得更精緻 */
