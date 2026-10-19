@@ -634,38 +634,43 @@ if (lobbyDiff) {
     });
 }
 </script>
-<!-- 把這段貼在 index.html 最底部，</body> 的正上方 -->
 <style>
-@media screen and (max-width: 850px) {
-    /* 強制主選單排版 */
+/* 使用 max-aspect-ratio: 1/1，這代表「只要高度 > 寬度 (直立)」，就會強制觸發！橫向絕對不受影響 */
+@media screen and (max-aspect-ratio: 1/1) {
+    /* 1. 主選單直立置中排版 */
     #scr-menu {
-        padding: 30px 20px !important;
+        padding: 5% !important;
         display: flex !important;
         flex-direction: column !important;
+        justify-content: center !important;
         align-items: center !important;
     }
     .menu-list {
-        width: 100% !important;
-        max-width: 100% !important;
+        width: 95% !important;
+        max-width: 400px !important;
         display: flex !important;
         flex-direction: column !important;
     }
     .menu-item, select.field {
         width: 100% !important;
-        min-height: 60px !important;
+        min-height: 65px !important;
         margin: 6px 0 !important;
         font-size: 16px !important;
     }
-    /* 強制升級卡片排版 */
+    
+    /* 2. 升級卡片防擠壓 (強制上下排) */
     #cards {
         flex-direction: column !important;
-        margin-top: 40px !important;
-        gap: 10px !important;
+        margin-top: 15% !important;
+        gap: 15px !important;
+        align-items: center !important;
     }
-    .card {
-        width: 90% !important;
-        min-height: 90px !important;
+    #cards .card {
+        width: 85% !important;
+        min-height: 100px !important;
     }
+    
+    /* 3. 隱藏多餘按鍵提示 */
     .key { display: none !important; }
 }
 </style>
