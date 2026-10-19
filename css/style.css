@@ -874,5 +874,41 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
         transform: scale(0.95);
         transform-origin: top center;
     }
+    /* 5. 主選單 (Menu) 介面完美置中與自適應 */
+      #scr-menu {
+          padding: 20px 15px !important;
+          overflow-y: auto !important; /* 螢幕太小時允許上下滑動 */
+          justify-content: center !important;
+      }
+      
+      /* 限制選單區塊的最大寬度，讓按鈕排版更集中好看 */
+      .menu-list {
+          width: 100% !important;
+          max-width: 350px !important;
+          margin: 0 auto !important; 
+      }
+      
+      /* 加高所有選單按鈕，讓大拇指更好點擊 */
+      .menu-item {
+          width: 100% !important;
+          min-height: 65px !important; 
+          padding: 10px 15px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+      }
+  
+      /* 難度選擇下拉選單也一起加高 */
+      select.field {
+          min-height: 45px !important;
+          font-size: 15px !important;
+      }
+  
+      /* 確保 Logo 標題不會超出手機螢幕 */
+      .about-logo, #scr-menu img {
+          max-width: 90% !important;
+          height: auto !important;
+          margin: 0 auto 20px auto !important;
+      }
 }
 /* ▲▲▲ 手機優化結束 ▲▲▲ */
