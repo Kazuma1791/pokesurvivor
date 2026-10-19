@@ -635,62 +635,77 @@ if (lobbyDiff) {
 }
 </script>
 <style>
-/* ▼▼▼ 手機直立完美滾動版 ▼▼▼ */
+/* ▼▼▼ 手機直立：頂部優化 + 雙排網格選單版 ▼▼▼ */
 @media screen and (max-aspect-ratio: 1/1) {
-    /* 1. 解除主選單的強制置中擠壓，改為允許上下滑動 */
+    /* 1. 主選單容器：大幅增加頂部空間 (110px)，徹底避開最上面的設定、全螢幕等懸浮圖示 */
     #scr-menu {
         display: block !important; 
         overflow-y: auto !important;
-        padding: 80px 15px 40px 15px !important; /* 頂部推空 80px 避開圖示 */
+        padding: 110px 15px 40px 15px !important; 
         height: 100vh !important;
         box-sizing: border-box;
     }
 
-    /* 2. 稍微縮小 Logo 與中間的寶可夢框，騰出空間 */
+    /* 2. Logo 尺寸微調，讓它在標題下方顯得更精緻 */
     .about-logo, #scr-menu img {
-        max-width: 80% !important;
+        max-width: 75% !important;
         margin: 0 auto 10px auto !important;
         display: block;
     }
+
+    /* 3. 寶可夢展示框 (耿鬼) 微調 */
     #menu-char {
-        transform: scale(0.8);
+        transform: scale(0.85);
         transform-origin: top center;
-        margin: -10px auto -30px auto !important; /* 減少上下空白 */
+        margin: -5px auto -20px auto !important;
     }
 
-    /* 3. 按鈕列表：不再壓縮，自然排下來 */
+    /* 4. ★ 選單按鈕大改造：變成 2 欄 (雙排) 網格排列 ★ */
     .menu-list {
         position: relative !important;
-        display: flex !important;
-        flex-direction: column !important;
+        display: grid !important; 
+        grid-template-columns: repeat(2, 1fr) !important; /* 強制切成左右兩半 */
+        gap: 10px !important; /* 按鈕之間的間距 */
         width: 100% !important;
-        max-width: 350px !important;
+        max-width: 400px !important;
         margin: 0 auto !important;
-        gap: 12px !important; /* 按鈕之間的距離 */
     }
 
-    /* 4. 讓按鈕高度彈性自適應，不再被壓扁 */
+    /* 5. 讓難度選擇與「出發冒險」這個大區塊，橫跨兩格 (佔滿整行寬度) */
+    .menu-list > div:first-child {
+        grid-column: span 2 !important; 
+    }
+
+    /* 6. 個別選單按鈕的樣式：自適應高度、文字置中 */
     .menu-item {
         height: auto !important;
-        min-height: 60px !important;
-        padding: 12px 10px !important;
-        white-space: normal !important; /* 允許文字自動換行 */
+        min-height: 65px !important;
+        padding: 10px 5px !important;
+        margin: 0 !important;
+        text-align: center !important;
+        white-space: normal !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
-    
-    /* 難度選單與外框優化 */
+
+    /* 難度選單高度優化 */
     select.field {
         height: 45px !important;
         font-size: 15px !important;
+        margin-bottom: 8px !important;
     }
 
-    /* 5. 處理底部版權文字，避免重疊 */
+    /* 7. 底部版權文字避免重疊 */
     p[style*="font-size:10px"], .legal {
         position: relative !important;
         margin-top: 30px !important;
         line-height: 1.5 !important;
+        grid-column: span 2 !important; /* 如果它在網格內，也讓它橫跨兩格 */
     }
 
-    /* 6. 升級卡片防擠壓 (保持上下排列) */
+    /* 8. 升級卡片防擠壓 (保持上下排列) */
     #cards {
         flex-direction: column !important;
         margin-top: 15% !important;
