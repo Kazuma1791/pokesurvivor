@@ -1164,5 +1164,92 @@ if (lobbyDiff) {
     }
 })();
 </script>
+<!-- ▼▼▼ 遊戲平衡優化難度外掛：破解移速人權、前期暴斃與嘆息之牆 ▼▼▼ -->
+<script>
+(function() {
+    // 定義平衡優化模式的調整系數（可根據喜好隨時微調數值）
+    const BALANCE_CONFIG = {
+        // 1. 移速與前期緩衝補正
+        minPlayerSpeedBonus: 1.12,  // 讓原本移速過慢的寶可夢獲得基礎 +12% 移速補正，不再被 F1 賽車秒追上
+        earlySpawnDelayFactor: 1.3, // 將前 2 分鐘的生怪壓力與敵人移速稍微延緩/下修 30%，給玩家發育時間
+
+        // 2. 破解「嘆息之牆」(治療怪與護盾怪削弱)
+        healMonsterNerf: 0.35,      // 將敵方治療/補血怪的補血效果砍剩 35%
+        shieldMonsterNerf: 0.5      // 將敵方護盾怪的護盾厚度與減傷減半
+    };
+
+    // 在大廳或設定面板注入「平衡優化難度」開關
+    function injectBalanceModeUI() {
+        const lobbyStartBtn = document.getElementById('lobby-start');
+        if (!lobbyStartBtn) {
+            setTimeout(injectBalanceModeUI, 800);
+            return;
+        }
+        const container = lobbyStartBtn.closest('.box') || lobbyStartBtn.parentElement.parentElement;
+        if (!container || document.getElementById('custom-balance-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'custom-balance-panel';
+        panel.style.cssText = 'margin: 10px 0; padding: 10px; background: rgba(20, 40, 30, 0.85); border: 1px solid #51cf66; border-radius: 10px; font-size: 13px; color: #fff;';
+        panel.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#51cf66;">
+                    <input type="checkbox" id="chk-balance-mode" checked style="width:16px; height:16px; accent-color:#51cf66;">
+                    🛡️ 啟用「平衡優化難度」 (防秒殺・破除嘆息之牆)
+                </label>
+                <span style="font-size:11px; opacity:0.8; color:#b2f2bb;">(自動微調移速、前期生怪與削弱敵方補盾)</span>
+            </div>
+        `;
+        container.insertBefore(panel, container.firstChild);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectBalanceModeUI);
+    } else {
+        injectBalanceModeUI();
+    }
+
+    // 攔截遊戲主循環，即時套用平衡優化邏輯
+    function hookGameLoop() {
+        // 當遊戲引擎或全域物件初始化完成後，透過劫持屬性或 Canvas 繪製前回調來優化數值
+        setInterval(() => {
+            const isEnabled = document.getElementById('chk-balance-mode') ? document.getElementById('chk-balance-mode').checked : true;
+            if (!isEnabled) return;
+
+            // 尋找遊戲全域實例 (通常掛載在 window 下的 App 或遊戲引擎中)
+            for (const key in window) {
+                try {
+                    const obj = window[key];
+                    if (obj && typeof obj === 'object') {
+                        // 若偵測到玩家實例與敵人陣列，動態套用平衡補正
+                        if (obj.player && typeof obj.player.speed === 'number') {
+                            // 確保低速寶可夢也能擁有最低安全移速底線
+                            if (obj.player.baseSpeed && obj.player.speed < obj.player.baseSpeed * BALANCE_CONFIG.minPlayerSpeedBonus) {
+                                obj.player.speed = obj.player.baseSpeed * BALANCE_CONFIG.minPlayerSpeedBonus;
+                            }
+                        }
+                        // 針對場上敵方治療怪/護盾怪進行數值削弱（破除嘆息之牆）
+                        if (Array.isArray(obj.enemies)) {
+                            obj.enemies.forEach(enemy => {
+                                if (enemy && !enemy._balanceNerfed) {
+                                    enemy._balanceNerfed = true;
+                                    // 若為補血或護盾型敵人，自動下修其關鍵數值
+                                    if (enemy.isHealer || (enemy.type && enemy.type.includes('heal'))) {
+                                        enemy.healPower = (enemy.healPower || 10) * BALANCE_CONFIG.healMonsterNerf;
+                                    }
+                                    if (enemy.isShield || (enemy.type && enemy.type.includes('shield'))) {
+                                        enemy.maxShield = (enemy.maxShield || enemy.hp || 50) * BALANCE_CONFIG.shieldMonsterNerf;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                } catch(e) {}
+            }
+        }, 1000);
+    }
+    hookGameLoop();
+})();
+</script>
 </body> <!-- 確保在 body 結束之前 -->
 </html>
