@@ -887,25 +887,22 @@ if (lobbyDiff) {
     body .key { display: none !important; }
 }
 </style>
-<!-- ▼▼▼ 多人連線優化外掛 V3 (純 index.html 終極版：0秒直入伺服器中繼 + 8人防卡頓) ▼▼▼ -->
+<!-- ▼▼▼ 多人連線優化外掛 V4 (終極完整版：0秒秒連 + 8人防卡頓 + 開局強制解鎖防卡畫面) ▼▼▼ -->
 <script>
 (function() {
     /* ==========================================================
        0. 終極秒連黑科技：免改 app.min.js，徹底消滅「連線中...」卡死
        ========================================================== */
-    // (A) 強制關閉易被行動網路/防火牆卡死 9 秒的 WebRTC，讓遊戲自動秒進 catch 啟用 'relay' (Firebase 伺服器連線)
     try {
         window.RTCPeerConnection = null;
         window.webkitRTCPeerConnection = null;
         window.mozRTCPeerConnection = null;
     } catch (e) {}
 
-    // (B) 攔截遊戲去敲原作者私人 TURN 伺服器的無效請求，避免私服報錯與延遲
     const origFetch = window.fetch;
     if (origFetch) {
         window.fetch = function(url, options) {
             if (typeof url === 'string' && (url.includes('turn') || url.includes('ice') || (options && options.headers && options.headers.Authorization))) {
-                // 若非連向自己的網域或標準資源，瞬間回傳空 JSON，0 延遲放行
                 return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
             }
             return origFetch.apply(this, arguments);
@@ -958,8 +955,8 @@ if (lobbyDiff) {
             return;
         }
         const RefProto = firebase.database.Reference.prototype;
-        if (RefProto._throttledPatchedV3) return;
-        RefProto._throttledPatchedV3 = true;
+        if (RefProto._throttledPatchedV4) return;
+        RefProto._throttledPatchedV4 = true;
 
         const origSet = RefProto.set;
         const origUpdate = RefProto.update;
@@ -1162,8 +1159,9 @@ if (lobbyDiff) {
     } else {
         injectQuickRoomUI();
     }
+
     /* ==========================================================
-       4. 房主開局強制解鎖器：防止隊員卡在「等待房主/已暫停」無法解除
+       4. 房主開局強制解鎖器：自動清除卡住隊員畫面的「等待房主」遮罩
        ========================================================== */
     function watchGameStart() {
         const Social = getSocial();
@@ -1172,21 +1170,20 @@ if (lobbyDiff) {
             return;
         }
         
-        // 監聽當前房間的 started 狀態
         if (Social.room && Social.room.id) {
             firebase.database().ref('rooms/' + Social.room.id + '/started').on('value', (snap) => {
                 if (snap.val() === true) {
-                    console.log("🚀 [強制解鎖] 偵測到房主已開始遊戲，強制解鎖畫面！");
-                    // 尋找遊戲內的暫停按鈕或解凍渲染迴圈
-                    const pauseOverlay = document.querySelector('.pause-overlay, #pause-screen, .waiting-host');
-                    if (pauseOverlay) {
-                        pauseOverlay.style.display = 'none';
-                    }
-                    // 觸發全域遊戲開始事件或取消暫停狀態
+                    console.log("🚀 [強制解鎖] 偵測到房主已開始遊戲，強制移除等待遮罩！");
+                    // 暴力尋找並隱藏所有包含等待房主提示的 DOM 元素
+                    document.querySelectorAll('*').forEach(el => {
+                        if (el.innerText && (el.innerText.includes('等待房主') || el.innerText.includes('Esperando') || el.innerText.includes('Waiting'))) {
+                            let targetBox = el.closest('div') || el;
+                            targetBox.style.display = 'none';
+                        }
+                    });
+                    // 同時呼叫全域解除暫停函式
                     if (window.App && typeof window.App.resume === 'function') {
                         window.App.resume();
-                    } else if (window.Game && typeof window.Game.start === 'function') {
-                        window.Game.start();
                     }
                 }
             });
