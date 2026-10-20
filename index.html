@@ -887,25 +887,12 @@ if (lobbyDiff) {
     body .key { display: none !important; }
 }
 </style>
-<!-- ▼▼▼ 多人連線優化外掛 V6 (終極隊員端強制同步解凍版) ▼▼▼ -->
+<!-- ▼▼▼ 多人連線優化外掛 V7 (回歸原版穩健邏輯：僅解鎖 8 人上限 + 基礎防休眠) ▼▼▼ -->
 <script>
 (function() {
-    try {
-        window.RTCPeerConnection = null;
-        window.webkitRTCPeerConnection = null;
-        window.mozRTCPeerConnection = null;
-    } catch (e) {}
-
-    const origFetch = window.fetch;
-    if (origFetch) {
-        window.fetch = function(url, options) {
-            if (typeof url === 'string' && (url.includes('turn') || url.includes('ice') || (options && options.headers && options.headers.Authorization))) {
-                return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-            }
-            return origFetch.apply(this, arguments);
-        };
-    }
-
+    /* ==========================================================
+       1. 背景防休眠機制：防止手機切換分頁或背景時斷線
+       ========================================================== */
     try {
         let keepAliveInitialized = false;
         document.addEventListener('click', function initKeepAlive() {
@@ -926,6 +913,9 @@ if (lobbyDiff) {
         }, { once: true });
     } catch (e) {}
 
+    /* ==========================================================
+       2. 智慧型戰鬥節流器：僅在開局戰鬥時節流座標，大廳 100% 原生直通
+       ========================================================== */
     const THROTTLE_MS = 95;
     const lastSentMap = new Map();
 
@@ -946,8 +936,8 @@ if (lobbyDiff) {
             return;
         }
         const RefProto = firebase.database.Reference.prototype;
-        if (RefProto._throttledPatchedV6) return;
-        RefProto._throttledPatchedV6 = true;
+        if (RefProto._throttledPatchedV7) return;
+        RefProto._throttledPatchedV7 = true;
 
         const origSet = RefProto.set;
         const origUpdate = RefProto.update;
@@ -989,6 +979,9 @@ if (lobbyDiff) {
     }
     installNetworkOptimizer();
 
+    /* ==========================================================
+       3. 大廳快速連線通道 (房號直連 / 掃描公開房間 / 複製房號)
+       ========================================================== */
     function injectQuickRoomUI() {
         const lobbyStartBtn = document.getElementById('lobby-start');
         if (!lobbyStartBtn) {
@@ -1003,30 +996,22 @@ if (lobbyDiff) {
         panel.style.cssText = 'margin: 12px 0; padding: 12px; background: rgba(15, 25, 50, 0.85); border: 1px solid #4a6fa5; border-radius: 10px; font-size: 13px; color: #fff;';
         panel.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-                <b style="color:#ffd23f; font-size:14px;">🚀 8人快速連線通道 (V6 同步防卡版)</b>
+                <b style="color:#ffd23f; font-size:14px;">🚀 8人快速連線通道 (原版穩健模式)</b>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button id="btn-fix-sync" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px; background:#2b8a3e; border-color:#51cf66;">⚡ 強制解凍畫面</button>
                     <button id="btn-copy-room" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px;">📋 複製房號</button>
                     <button id="btn-refresh-rooms" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px;">🔄 掃描公開房間</button>
                 </div>
             </div>
             <div style="display:flex; gap:6px; margin-bottom:8px;">
-                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號直接秒進..." style="flex:1; height:34px; font-size:13px; padding:0 10px; margin:0;">
-                <button id="btn-direct-join" class="btn gold" style="padding:0 14px; height:34px; min-height:34px; font-size:13px; white-space:nowrap;">⚡ 秒進房間</button>
+                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號直接加入..." style="flex:1; height:34px; font-size:13px; padding:0 10px; margin:0;">
+                <button id="btn-direct-join" class="btn gold" style="padding:0 14px; height:34px; min-height:34px; font-size:13px; white-space:nowrap;">⚡ 加入房間</button>
             </div>
             <div id="public-room-list" style="max-height:120px; overflow-y:auto; font-size:12px; color:#b0c4de; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.15);">
-                ✅ 已啟用 V6 隊員端強制同步解凍機制！
+                💡 提示：若部分隊友顯示連線中，只要房主按下開始，原版會自動完成同步！
             </div>
         `;
 
         container.insertBefore(panel, container.firstChild);
-
-        // 手動解凍按鈕：如果隊員進圖還是被卡住，點一下這個按鈕就能強制解除暫停
-        document.getElementById('btn-fix-sync').onclick = () => {
-            forceUnfreezeGame();
-            const listEl = document.getElementById('public-room-list');
-            listEl.innerHTML = '<span style="color:#51cf66;">✅ 已強制強制解除暫停並同步畫面！</span>';
-        };
 
         document.getElementById('btn-copy-room').onclick = async () => {
             const Social = getSocial();
@@ -1111,51 +1096,6 @@ if (lobbyDiff) {
     } else {
         injectQuickRoomUI();
     }
-
-    /* ==========================================================
-       4. 核心解凍與同局同步引擎：強力清除等待遮罩並解除遊戲暫停
-       ========================================================== */
-    function forceUnfreezeGame() {
-        // (A) 隱藏畫面上所有包含等待或暫停提示的 DOM 元素
-        document.querySelectorAll('div').forEach(el => {
-            const text = el.innerText || '';
-            if (text.includes('等待房主') || text.includes('Esperando') || text.includes('Waiting') || text.includes('已暫停')) {
-                if (el.style) el.style.display = 'none';
-            }
-        });
-
-        // (B) 嘗試解開遊戲全域的暫停旗標或呼叫 resume
-        try {
-            if (window.App && typeof window.App.resume === 'function') window.App.resume();
-            if (window.Game && typeof window.Game.resume === 'function') window.Game.resume();
-            if (window.isPaused) window.isPaused = false;
-        } catch(e) {}
-    }
-
-    function watchGameStart() {
-        const Social = getSocial();
-        if (!Social || !window.firebase || !firebase.database) {
-            setTimeout(watchGameStart, 1000);
-            return;
-        }
-        
-        if (Social.room && Social.room.id) {
-            const rId = Social.room.id;
-            // 持續監聽 Firebase 房間的 started 狀態
-            firebase.database().ref('rooms/' + rId + '/started').on('value', (snap) => {
-                if (snap.val() === true) {
-                    console.log("🚀 [V6 同步] 偵測到房主已開局，強力解除隊員暫停！");
-                    if (Social.room) Social.room.started = true;
-                    
-                    // 執行多次解凍，確保畫面絕對被掀開
-                    forceUnfreezeGame();
-                    setTimeout(forceUnfreezeGame, 300);
-                    setTimeout(forceUnfreezeGame, 800);
-                }
-            });
-        }
-    }
-    setTimeout(watchGameStart, 2000);
 })();
 </script>
 <!-- ▼▼▼ 遊戲平衡優化難度外掛：破解移速人權、前期暴斃與嘆息之牆 ▼▼▼ -->
