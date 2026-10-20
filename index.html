@@ -639,9 +639,9 @@ if (lobbyDiff) {
 @media screen and (orientation: portrait) {
 
     /* ==========================================
-       區塊 1：最頂部按鈕列 (#topbar) 全部縮小並自動排成兩小列，絕不超出畫面
+       區塊 1：最頂部按鈕列 (#topbar) 僅在非隱藏狀態下顯示，進入戰鬥自動消失
        ========================================== */
-    body #topbar {
+    body #topbar:not(.hidden) {
         position: fixed !important;
         top: max(4px, env(safe-area-inset-top)) !important;
         left: 0 !important;
@@ -650,12 +650,17 @@ if (lobbyDiff) {
         padding: 4px 8px !important;
         box-sizing: border-box !important;
         display: flex !important;
-        flex-wrap: wrap !important; /* ★ 關鍵：超過寬度自動換到第二小行，絕不擠出螢幕外 */
+        flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 4px 5px !important;
         z-index: 100 !important;
         transform: none !important;
+    }
+
+    /* ★ 新增這行：當進入遊戲戰鬥加上 .hidden 時，強制徹底隱藏頂部按鈕列 ★ */
+    body #topbar.hidden {
+        display: none !important;
     }
 
     /* 實質縮小頂部每個膠囊與按鈕的長寬、字體與內距，並強制文字橫排 */
