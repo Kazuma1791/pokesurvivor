@@ -887,16 +887,49 @@ if (lobbyDiff) {
     body .key { display: none !important; }
 }
 </style>
-<!-- ▼▼▼ 多人連線優化外掛：8人防卡頓節流器 + 免加好友直連大廳 ▼▼▼ -->
+<!-- ▼▼▼ 多人連線優化外掛 V2：防休眠心跳 + 零延遲握手 + 強制重連/踢人面板 ▼▼▼ -->
 <script>
 (function() {
     /* ==========================================================
-       1. 8人連線防卡頓：Firebase RTDB 高頻座標封包節流器 (Throttler)
+       1. 背景防休眠機制：防止玩家切換分頁或手機切背景時卡在「連線中...」
        ========================================================== */
-    const THROTTLE_MS = 110; // 將高頻座標同步限制在約每秒 9 次，大幅降低 8 人同屏卡頓與發燙
+    try {
+        // 透過極低音量的靜音 AudioContext 防止行動裝置瀏覽器凍結背景網頁的網路連線
+        let keepAliveInitialized = false;
+        document.addEventListener('click', function initKeepAlive() {
+            if (keepAliveInitialized) return;
+            keepAliveInitialized = true;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    gain.gain.value = 0.0001; // 完全無聲
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                }
+            } catch (e) {}
+        }, { once: true });
+    } catch (e) {}
+
+    /* ==========================================================
+       2. 智慧型戰鬥節流器：大廳握手 100% 零延遲，僅在開局戰鬥時節流座標
+       ========================================================== */
+    const THROTTLE_MS = 95;
     const lastSentMap = new Map();
-    const pendingTimerMap = new Map();
-    const pendingDataMap = new Map();
+
+    function getSocial() {
+        for (const k in window) {
+            try {
+                if (window[k] && window[k].Social && typeof window[k].Social.joinRoom === 'function') {
+                    return window[k].Social;
+                }
+            } catch(e) {}
+        }
+        return window.App && window.App.Social ? window.App.Social : null;
+    }
 
     function installNetworkOptimizer() {
         if (!window.firebase || !firebase.database) {
@@ -904,49 +937,38 @@ if (lobbyDiff) {
             return;
         }
         const RefProto = firebase.database.Reference.prototype;
-        if (RefProto._throttledPatched) return;
-        RefProto._throttledPatched = true;
+        if (RefProto._throttledPatchedV2) return;
+        RefProto._throttledPatchedV2 = true;
 
         const origSet = RefProto.set;
         const origUpdate = RefProto.update;
 
-        // 判斷是否為戰鬥中的高頻座標/狀態路徑 (rooms/{roomId}/p/{uid} 或 rooms/{roomId}/w)
-        function isHighFreqPath(pathStr) {
+        // ★ 關鍵修正：只有當遊戲「已經正式開局 (Social.started === true)」且為座標路徑時才節流
+        // 在大廳組隊階段 100% 原生直通，絕不阻擋 WebRTC 信令 (sig) 與成員握手狀態！
+        function shouldThrottle(pathStr) {
+            const Social = getSocial();
+            if (!Social || !Social.started) return false; 
+            if (pathStr.includes('/sig') || pathStr.includes('/m/') || pathStr.includes('/host')) return false;
             return pathStr.includes('/rooms/') && (pathStr.includes('/p/') || pathStr.endsWith('/w'));
         }
 
         RefProto.set = function(val, onComplete) {
             const path = this.toString();
-            if (!isHighFreqPath(path) || val === null) {
-                return origSet.apply(this, arguments); // 重要指令 (建房/進房/開局/離開) 0延遲直發
+            if (!shouldThrottle(path) || val === null) {
+                return origSet.apply(this, arguments);
             }
             const now = performance.now();
             const last = lastSentMap.get(path) || 0;
             if (now - last >= THROTTLE_MS) {
                 lastSentMap.set(path, now);
                 return origSet.call(this, val, onComplete);
-            } else {
-                // 節流緩衝：只保留最新一筆座標，丟棄中間冗餘封包
-                pendingDataMap.set(path, { ref: this, val, onComplete, fn: origSet });
-                if (!pendingTimerMap.has(path)) {
-                    const delay = THROTTLE_MS - (now - last);
-                    pendingTimerMap.set(path, setTimeout(() => {
-                        pendingTimerMap.delete(path);
-                        const item = pendingDataMap.get(path);
-                        if (item) {
-                            pendingDataMap.delete(path);
-                            lastSentMap.set(path, performance.now());
-                            item.fn.call(item.ref, item.val, item.onComplete);
-                        }
-                    }, delay));
-                }
-                return Promise.resolve();
             }
+            return Promise.resolve();
         };
 
         RefProto.update = function(val, onComplete) {
             const path = this.toString();
-            if (!isHighFreqPath(path)) {
+            if (!shouldThrottle(path)) {
                 return origUpdate.apply(this, arguments);
             }
             const now = performance.now();
@@ -957,16 +979,13 @@ if (lobbyDiff) {
             }
             return Promise.resolve();
         };
-
-        console.log("✅ [連線優化] 8人防卡頓封包節流器已啟動！");
     }
     installNetworkOptimizer();
 
     /* ==========================================================
-       2. 進房間連線優化：免加好友「房號直連」+「公開房間列表」+「強制重整同步」
+       3. 大廳快速連線通道 + 強制刷新握手 + 踢出卡死玩家工具
        ========================================================== */
     function injectQuickRoomUI() {
-        // 尋找多人大廳容器 (相容各種版本 ID)
         const lobbyStartBtn = document.getElementById('lobby-start');
         if (!lobbyStartBtn) {
             setTimeout(injectQuickRoomUI, 800);
@@ -977,46 +996,97 @@ if (lobbyDiff) {
 
         const panel = document.createElement('div');
         panel.id = 'custom-coop-helper';
-        panel.style.cssText = 'margin: 12px 0; padding: 12px; background: rgba(15, 25, 50, 0.75); border: 1px solid #4a6fa5; border-radius: 10px; font-size: 13px; color: #fff;';
+        panel.style.cssText = 'margin: 12px 0; padding: 12px; background: rgba(15, 25, 50, 0.85); border: 1px solid #4a6fa5; border-radius: 10px; font-size: 13px; color: #fff;';
         panel.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-                <b style="color:#ffd23f; font-size:14px;">🚀 快速連線通道 (免加好友直連)</b>
-                <div style="display:flex; gap:6px;">
+                <b style="color:#ffd23f; font-size:14px;">🚀 8人快速連線與狀態修復面板</b>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="btn-fix-sync" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px; background:#2b8a3e; border-color:#51cf66;">⚡ 修復「連線中」卡住</button>
                     <button id="btn-copy-room" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px;">📋 複製房號</button>
                     <button id="btn-refresh-rooms" class="btn" style="padding:4px 10px; font-size:12px; min-height:28px;">🔄 掃描公開房間</button>
                 </div>
             </div>
             <div style="display:flex; gap:6px; margin-bottom:8px;">
-                <input id="inp-direct-room" class="field" type="text" placeholder="貼上朋友的房號直接進房..." style="flex:1; height:34px; font-size:13px; padding:0 10px; margin:0;">
+                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號直接秒進..." style="flex:1; height:34px; font-size:13px; padding:0 10px; margin:0;">
                 <button id="btn-direct-join" class="btn gold" style="padding:0 14px; height:34px; min-height:34px; font-size:13px; white-space:nowrap;">⚡ 秒進房間</button>
             </div>
-            <div id="public-room-list" style="max-height:110px; overflow-y:auto; font-size:12px; color:#b0c4de; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.15);">
-                點擊「🔄 掃描公開房間」可查看目前等待中的隊伍，或直接貼上房號加入。
+            <div id="public-room-list" style="max-height:120px; overflow-y:auto; font-size:12px; color:#b0c4de; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.15);">
+                💡 若隊友顯示「連線中...」，請提醒對方<b>不要把遊戲網頁切到背景</b>，或點擊上方綠色「⚡ 修復連線中卡住」按鈕重新握手！
             </div>
         `;
 
-        // 插入在挑戰難度或開始按鈕上方
         container.insertBefore(panel, container.firstChild);
 
-        // 取得遊戲內建 Social 物件
-        function getSocial() {
-            for (const k in window) {
-                try {
-                    if (window[k] && window[k].Social && typeof window[k].Social.joinRoom === 'function') {
-                        return window[k].Social;
-                    }
-                } catch(e) {}
+        // ★ 功能 A：一鍵修復「連線中...」卡住 (強制重新廣播自身狀態並重連房間信令)
+        document.getElementById('btn-fix-sync').onclick = async () => {
+            const Social = getSocial();
+            const listEl = document.getElementById('public-room-list');
+            if (!Social || !Social.room) {
+                listEl.innerHTML = '<span style="color:#ff6b6b;">⚠️ 你目前還不在任何房間內！</span>';
+                return;
             }
-            return window.App && window.App.Social ? window.App.Social : null;
-        }
+            const rId = Social.room.id;
+            const isHost = Social.room.isHost;
+            listEl.innerHTML = '⏳ 正在強制刷新所有隊友的連線握手訊號...';
 
-        // 功能 A：一鍵複製目前房號
+            try {
+                if (typeof Social.refreshPresence === 'function') Social.refreshPresence();
+                if (typeof Social.refreshMember === 'function') Social.refreshMember();
+
+                // 從 Firebase 讀取目前成員，若為房主可看到誰卡住並提供「踢出重進」按鈕
+                const snap = await firebase.database().ref('rooms/' + rId + '/m').get();
+                const members = snap.val() || {};
+                const myUid = Social.uid;
+
+                // 強制更新自己的時間戳記與狀態，觸發全房重新進行 WebRTC / RTDB 握手
+                if (myUid && members[myUid]) {
+                    await firebase.database().ref('rooms/' + rId + '/m/' + myUid).update({
+                        ts: firebase.database.ServerValue.TIMESTAMP,
+                        ready: true,
+                        connected: true
+                    });
+                }
+
+                // 若不是房主（例如自己是顯示連線中的隊友），自動執行「無感閃退重進」徹底打通連線
+                if (!isHost) {
+                    await Social.leaveRoom();
+                    await new Promise(r => setTimeout(r, 300));
+                    await Social.joinRoom(rId);
+                    listEl.innerHTML = '<span style="color:#51cf66;">✅ 已為你重新建立與房主的快速通道！</span>';
+                    return;
+                }
+
+                // 若是房主，列出目前房間成員，允許一鍵清理卡死的「幽靈連線」
+                const mList = Object.entries(members).filter(([uid]) => uid !== myUid);
+                if (mList.length === 0) {
+                    listEl.innerHTML = '✅ 已刷新房間狀態（目前房內只有你一人）。';
+                } else {
+                    listEl.innerHTML = '<div style="margin-bottom:4px; color:#51cf66;">✅ 已發送強制喚醒訊號！若某位隊友仍卡在「連線中」，請他點一下他的「⚡修復」按鈕，或由你將他踢出重進：</div>' +
+                        mList.map(([uid, m]) => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 6px; margin-top:3px; background:rgba(255,255,255,0.08); border-radius:4px;">
+                                <span>👤 <b>${m.name || uid}</b></span>
+                                <button class="btn btn-kick-member" data-uid="${uid}" style="padding:2px 8px; font-size:11px; min-height:22px; background:#c92a2a;">踢出重進</button>
+                            </div>
+                        `).join('');
+
+                    listEl.querySelectorAll('.btn-kick-member').forEach(btn => {
+                        btn.onclick = async () => {
+                            const targetUid = btn.getAttribute('data-uid');
+                            await firebase.database().ref('rooms/' + rId + '/m/' + targetUid).remove();
+                            btn.parentElement.remove();
+                        };
+                    });
+                }
+            } catch (err) {
+                listEl.innerHTML = '<span style="color:#ff6b6b;">❌ 刷新失敗：' + err.message + '</span>';
+            }
+        };
+
+        // 功能 B：複製房號
         document.getElementById('btn-copy-room').onclick = async () => {
             const Social = getSocial();
-            if (!Social) return alert('找不到連線模組，請確認已登入帳號！');
-            if (!Social.room) {
-                await Social.createRoom();
-            }
+            if (!Social) return alert('請先登入帳號！');
+            if (!Social.room) await Social.createRoom();
             if (Social.room && Social.room.id) {
                 navigator.clipboard.writeText(Social.room.id);
                 const btn = document.getElementById('btn-copy-room');
@@ -1025,18 +1095,15 @@ if (lobbyDiff) {
             }
         };
 
-        // 功能 B：輸入房號直接進房 (自動先清理殘留舊房間狀態，防止卡死)
+        // 功能 C：秒進房間
         async function safeJoinRoom(roomId) {
             roomId = (roomId || '').trim();
             if (!roomId) return alert('請先輸入房號！');
             const Social = getSocial();
-            if (!Social) return alert('請先登入正式帳號再進行連線！');
-
+            if (!Social) return alert('請先登入正式帳號！');
             const listEl = document.getElementById('public-room-list');
-            listEl.innerHTML = '⏳ 正在清理舊連線並加入房間 <b>' + roomId + '</b> ...';
-
+            listEl.innerHTML = '⏳ 正在加入房間 <b>' + roomId + '</b> ...';
             try {
-                // 若原本卡在自己的預設空房，先安全退出再進新房，徹底解決「點接受沒反應」的 Bug
                 if (Social.room && Social.room.id !== roomId) {
                     await Social.leaveRoom();
                     await new Promise(r => setTimeout(r, 250));
@@ -1045,7 +1112,7 @@ if (lobbyDiff) {
                 if (res && res.ok === false) {
                     listEl.innerHTML = '<span style="color:#ff6b6b;">❌ 加入失敗：' + (res.error || '房間已滿或不存在') + '</span>';
                 } else {
-                    listEl.innerHTML = '<span style="color:#51cf66;">✅ 成功進入房間 (' + roomId + ')！</span>';
+                    listEl.innerHTML = '<span style="color:#51cf66;">✅ 成功進入房間！請保持此畫面在最上層不要切到背景。</span>';
                 }
             } catch (err) {
                 listEl.innerHTML = '<span style="color:#ff6b6b;">❌ 連線異常：' + err.message + '</span>';
@@ -1056,33 +1123,25 @@ if (lobbyDiff) {
             safeJoinRoom(document.getElementById('inp-direct-room').value);
         };
 
-        // 功能 C：掃描 Firebase 目前所有等待中的公開房間 (免加好友一鍵進房)
+        // 功能 D：掃描公開房間
         document.getElementById('btn-refresh-rooms').onclick = async () => {
             const listEl = document.getElementById('public-room-list');
-            if (!window.firebase || !firebase.database) {
-                listEl.innerHTML = '❌ 尚未連上 Firebase 資料庫';
-                return;
-            }
-            listEl.innerHTML = '🔍 正在掃描伺服器上的公開房間...';
+            if (!window.firebase || !firebase.database) return;
+            listEl.innerHTML = '🔍 正在掃描公開房間...';
             try {
                 const snap = await firebase.database().ref('rooms').limitToLast(15).get();
                 const rooms = snap.val();
                 if (!rooms) {
-                    listEl.innerHTML = '目前沒有等待中的房間，你可以直接當房主按「📋 複製房號」給朋友！';
+                    listEl.innerHTML = '目前沒有等待中的房間。';
                     return;
                 }
                 const validRooms = [];
-                const now = Date.now();
                 for (const [rId, rData] of Object.entries(rooms)) {
                     if (!rData || rData.open === false || rData.started) continue;
                     const members = rData.m ? Object.values(rData.m) : [];
                     if (members.length > 0 && members.length < 8) {
                         const hostMember = members.find(m => m.uid === rData.host) || members[0];
-                        validRooms.push({
-                            id: rId,
-                            hostName: hostMember ? hostMember.name : '未知房主',
-                            count: members.length
-                        });
+                        validRooms.push({ id: rId, hostName: hostMember ? hostMember.name : '房主', count: members.length });
                     }
                 }
                 if (validRooms.length === 0) {
@@ -1095,12 +1154,11 @@ if (lobbyDiff) {
                         <button class="btn gold btn-quick-join" data-rid="${r.id}" style="padding:2px 10px; font-size:11px; min-height:24px;">加入</button>
                     </div>
                 `).join('');
-
                 listEl.querySelectorAll('.btn-quick-join').forEach(btn => {
                     btn.onclick = () => safeJoinRoom(btn.getAttribute('data-rid'));
                 });
             } catch (e) {
-                listEl.innerHTML = '⚠️ 無法讀取公開列表（請直接使用上方「房號直連」功能）：' + e.message;
+                listEl.innerHTML = '⚠️ 無法讀取列表：' + e.message;
             }
         };
     }
