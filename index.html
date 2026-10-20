@@ -1239,7 +1239,13 @@ if (lobbyDiff) {
     } else {
         injectBalanceModeUI();
     }
-
+<style>
+    /* 暴力隱藏多人連線中卡住玩家畫面的「等待房主」暫停遮罩與提示文字 */
+    div[class*="pause"], div[class*="waiting"], div[class*="host"], .pause-overlay, #pause-screen {
+        display: none !important;
+        pointer-events: none !important;
+    }
+</style>
     // 攔截遊戲主循環，即時套用平衡優化邏輯
     function hookGameLoop() {
         // 當遊戲引擎或全域物件初始化完成後，透過劫持屬性或 Canvas 繪製前回調來優化數值
