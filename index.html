@@ -1162,6 +1162,37 @@ if (lobbyDiff) {
     } else {
         injectQuickRoomUI();
     }
+    /* ==========================================================
+       4. 房主開局強制解鎖器：防止隊員卡在「等待房主/已暫停」無法解除
+       ========================================================== */
+    function watchGameStart() {
+        const Social = getSocial();
+        if (!Social || !window.firebase || !firebase.database) {
+            setTimeout(watchGameStart, 1000);
+            return;
+        }
+        
+        // 監聽當前房間的 started 狀態
+        if (Social.room && Social.room.id) {
+            firebase.database().ref('rooms/' + Social.room.id + '/started').on('value', (snap) => {
+                if (snap.val() === true) {
+                    console.log("🚀 [強制解鎖] 偵測到房主已開始遊戲，強制解鎖畫面！");
+                    // 尋找遊戲內的暫停按鈕或解凍渲染迴圈
+                    const pauseOverlay = document.querySelector('.pause-overlay, #pause-screen, .waiting-host');
+                    if (pauseOverlay) {
+                        pauseOverlay.style.display = 'none';
+                    }
+                    // 觸發全域遊戲開始事件或取消暫停狀態
+                    if (window.App && typeof window.App.resume === 'function') {
+                        window.App.resume();
+                    } else if (window.Game && typeof window.Game.start === 'function') {
+                        window.Game.start();
+                    }
+                }
+            });
+        }
+    }
+    setTimeout(watchGameStart, 2000);
 })();
 </script>
 <!-- ▼▼▼ 遊戲平衡優化難度外掛：破解移速人權、前期暴斃與嘆息之牆 ▼▼▼ -->
