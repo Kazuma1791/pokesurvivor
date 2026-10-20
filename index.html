@@ -887,7 +887,7 @@ if (lobbyDiff) {
     body .key { display: none !important; }
 }
 </style>
-<!-- ▼▼▼ 多人連線優化外掛 V7 (回歸原版穩健邏輯：僅解鎖 8 人上限 + 基礎防休眠) ▼▼▼ -->
+<!-- ▼▼▼ 多人連線優化外掛 V7 與 平衡優化難度 V3 最終完美整合版 ▼▼▼ -->
 <script>
 (function() {
     /* ==========================================================
@@ -1098,57 +1098,8 @@ if (lobbyDiff) {
     }
 })();
 </script>
-<!-- ▼▼▼ 遊戲平衡優化難度外掛：破解移速人權、前期暴斃與嘆息之牆 ▼▼▼ -->
-<script>
-(function() {
-    // 定義平衡優化模式的調整系數（可根據喜好隨時微調數值）
-    const BALANCE_CONFIG = {
-        // 1. 移速與前期緩衝補正
-        minPlayerSpeedBonus: 1.12,  // 讓原本移速過慢的寶可夢獲得基礎 +12% 移速補正，不再被 F1 賽車秒追上
-        earlySpawnDelayFactor: 1.3, // 將前 2 分鐘的生怪壓力與敵人移速稍微延緩/下修 30%，給玩家發育時間
 
-        // 2. 破解「嘆息之牆」(治療怪與護盾怪削弱)
-        healMonsterNerf: 0.35,      // 將敵方治療/補血怪的補血效果砍剩 35%
-        shieldMonsterNerf: 0.5      // 將敵方護盾怪的護盾厚度與減傷減半
-    };
-
-    // 在大廳或設定面板注入「平衡優化難度」開關
-    function injectBalanceModeUI() {
-        const lobbyStartBtn = document.getElementById('lobby-start');
-        if (!lobbyStartBtn) {
-            setTimeout(injectBalanceModeUI, 800);
-            return;
-        }
-        const container = lobbyStartBtn.closest('.box') || lobbyStartBtn.parentElement.parentElement;
-        if (!container || document.getElementById('custom-balance-panel')) return;
-
-        const panel = document.createElement('div');
-        panel.id = 'custom-balance-panel';
-        panel.style.cssText = 'margin: 10px 0; padding: 10px; background: rgba(20, 40, 30, 0.85); border: 1px solid #51cf66; border-radius: 10px; font-size: 13px; color: #fff;';
-        panel.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#51cf66;">
-                    <input type="checkbox" id="chk-balance-mode" checked style="width:16px; height:16px; accent-color:#51cf66;">
-                    🛡️ 啟用「平衡優化難度」 (防秒殺・破除嘆息之牆)
-                </label>
-                <span style="font-size:11px; opacity:0.8; color:#b2f2bb;">(自動微調移速、前期生怪與削弱敵方補盾)</span>
-            </div>
-        `;
-        container.insertBefore(panel, container.firstChild);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectBalanceModeUI);
-    } else {
-        injectBalanceModeUI();
-    }
-<style>
-    /* 暴力隱藏多人連線中卡住玩家畫面的「等待房主」暫停遮罩與提示文字 */
-    div[class*="pause"], div[class*="waiting"], div[class*="host"], .pause-overlay, #pause-screen {
-        display: none !important;
-        pointer-events: none !important;
-    }
-<!-- ▼▼▼ 平衡優化難度 V3 (強制浮動面板版：絕對不會找不到位置) ▼▼▼ -->
+<!-- ▼▼▼ 遊戲平衡優化難度 V3 (含強制浮動面板、移速補正、破盾與前期光速升等) ▼▼▼ -->
 <script>
 (function() {
     const BALANCE_CONFIG = {
@@ -1160,11 +1111,9 @@ if (lobbyDiff) {
         earlyGameDurationSec: 180     // 前期判定 (180秒)
     };
 
-    // 強制在畫面上方或大廳容器注入開關
     function injectBalanceModeUI() {
         if (document.getElementById('custom-balance-panel')) return;
 
-        // 尋找大廳的按鈕或容器，若找不到則直接掛載在 body 最上方
         const targetAnchor = document.getElementById('lobby-start') || document.body.firstElementChild;
         if (!targetAnchor) {
             setTimeout(injectBalanceModeUI, 500);
@@ -1198,7 +1147,6 @@ if (lobbyDiff) {
         setTimeout(injectBalanceModeUI, 500);
     }
 
-    // 攔截遊戲主循環，即時套用平衡與前期發育優化
     function hookGameLoop() {
         setInterval(() => {
             const chk = document.getElementById('chk-balance-mode');
