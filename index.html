@@ -607,6 +607,19 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+    if (!firebase.apps.length) {
+        firebase.initializeApp({
+            apiKey: 'AIzaSyCNyM-K54moLz-_xc6-qDWfHUH5KEdC07E',
+            authDomain: 'pokemonsurvivor-e89a5.firebaseapp.com',
+            projectId: 'pokemonsurvivor-e89a5',
+            storageBucket: 'pokemonsurvivor-e89a5.firebasestorage.app',
+            messagingSenderId: '693180646327',
+            appId: '1:693180646327:web:f706004dea2a00124dde32',
+            databaseURL: 'https://pokemonsurvivor-e89a5-default-rtdb.asia-southeast1.firebasedatabase.app'
+        });
+    }
+</script>
 <script src="js/app.min.js"></script>
 </body>
 </html>
