@@ -621,5 +621,104 @@
     }
 </script>
 <script src="js/app.min.js"></script>
+<!-- ▼▼▼ 綜合外掛：Google 登入解鎖 + 8人連線通道 ▼▼▼ -->
+<script>
+(function() {
+    // 網路連線優化 (保留原本的 8 人連線功能)
+    const THROTTLE_MS = 95;
+    const lastSentMap = new Map();
+    function getSocial() {
+        for (const k in window) { try { if (window[k] && window[k].Social && window[k].Social.joinRoom) return window[k].Social; } catch(e) {} }
+        return window.App && window.App.Social ? window.App.Social : null;
+    }
+    function installNetworkOptimizer() {
+        if (!window.firebase || !firebase.database) { setTimeout(installNetworkOptimizer, 500); return; }
+        const RefProto = firebase.database.Reference.prototype;
+        if (RefProto._throttledPatchedV7) return;
+        RefProto._throttledPatchedV7 = true;
+        const origSet = RefProto.set, origUpdate = RefProto.update;
+        function shouldThrottle(pathStr) {
+            const Social = getSocial();
+            if (!Social || !Social.started) return false; 
+            return pathStr.includes('/rooms/') && (pathStr.includes('/p/') || pathStr.endsWith('/w'));
+        }
+        RefProto.set = function(val, onComplete) {
+            const path = this.toString();
+            if (!shouldThrottle(path) || val === null) return origSet.apply(this, arguments);
+            const now = performance.now(), last = lastSentMap.get(path) || 0;
+            if (now - last >= THROTTLE_MS) { lastSentMap.set(path, now); return origSet.call(this, val, onComplete); }
+            return Promise.resolve();
+        };
+        RefProto.update = function(val, onComplete) {
+            const path = this.toString();
+            if (!shouldThrottle(path)) return origUpdate.apply(this, arguments);
+            const now = performance.now(), last = lastSentMap.get(path) || 0;
+            if (now - last >= THROTTLE_MS) { lastSentMap.set(path, now); return origUpdate.call(this, val, onComplete); }
+            return Promise.resolve();
+        };
+    }
+    installNetworkOptimizer();
+
+    // 注入全新控制面板
+    function injectUI() {
+        const lobbyStartBtn = document.getElementById('lobby-start');
+        if (!lobbyStartBtn) { setTimeout(injectUI, 800); return; }
+        const container = lobbyStartBtn.closest('.box') || lobbyStartBtn.parentElement.parentElement;
+        if (!container || document.getElementById('custom-coop-helper')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'custom-coop-helper';
+        panel.style.cssText = 'margin: 12px 0; padding: 12px; background: rgba(15, 25, 50, 0.85); border: 1px solid #4a6fa5; border-radius: 10px; font-size: 13px; color: #fff;';
+        
+        // 加入專屬 Google 登入按鈕
+        panel.innerHTML = `
+            <div style="margin-bottom:12px;">
+                <button id="btn-force-login" style="width:100%; padding:8px; background:#db4437; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px;">🔴 點我強制 Google 登入</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <b style="color:#ffd23f;">🚀 8人連線通道</b>
+                <div><button id="btn-copy-room" class="btn" style="padding:4px 8px;">📋 複製房號</button></div>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號..." style="flex:1; padding:4px;">
+                <button id="btn-direct-join" class="btn gold" style="padding:4px 8px;">⚡ 加入房間</button>
+            </div>
+            <div id="public-room-list" style="max-height:120px; overflow-y:auto;">💡 提示：若已登入可無視上方紅按鈕。</div>
+        `;
+        container.insertBefore(panel, container.firstChild);
+
+        // 綁定登入功能
+        document.getElementById('btn-force-login').onclick = () => {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then(() => {
+                location.reload();
+            }).catch(err => {
+                alert("登入失敗：" + err.message);
+            });
+        };
+
+        // 綁定連線功能
+        document.getElementById('btn-copy-room').onclick = async () => {
+            const Social = getSocial();
+            if (!Social) return alert('請先登入！');
+            if (!Social.room) await Social.createRoom();
+            if (Social.room && Social.room.id) { navigator.clipboard.writeText(Social.room.id); alert('已複製: ' + Social.room.id); }
+        };
+        document.getElementById('btn-direct-join').onclick = async () => {
+            const roomId = (document.getElementById('inp-direct-room').value || '').trim();
+            if (!roomId) return alert('請輸入房號！');
+            const Social = getSocial();
+            if (!Social) return alert('請先登入！');
+            try {
+                if (Social.room && Social.room.id !== roomId) { await Social.leaveRoom(); await new Promise(r => setTimeout(r, 250)); }
+                await Social.joinRoom(roomId);
+                document.getElementById('public-room-list').innerHTML = '✅ 成功進入房間！';
+            } catch (err) { document.getElementById('public-room-list').innerHTML = '❌ 連線異常：' + err.message; }
+        };
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectUI);
+    else injectUI();
+})();
+</script>
 </body>
 </html>
