@@ -659,45 +659,37 @@
     }
     installNetworkOptimizer();
 
-    // 注入全新控制面板
+// 注入全新絕對懸浮面板
     function injectUI() {
-        const lobbyStartBtn = document.getElementById('lobby-start');
-        if (!lobbyStartBtn) { setTimeout(injectUI, 800); return; }
-        const container = lobbyStartBtn.closest('.box') || lobbyStartBtn.parentElement.parentElement;
-        if (!container || document.getElementById('custom-coop-helper')) return;
-
+        if (document.getElementById('custom-coop-helper')) return;
         const panel = document.createElement('div');
         panel.id = 'custom-coop-helper';
-        panel.style.cssText = 'margin: 12px 0; padding: 12px; background: rgba(15, 25, 50, 0.85); border: 1px solid #4a6fa5; border-radius: 10px; font-size: 13px; color: #fff;';
+        // 改為強制懸浮於右上角，確保隨時可見
+        panel.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; width:280px; padding: 12px; background: rgba(15, 25, 50, 0.95); border: 2px solid #db4437; border-radius: 10px; font-size: 13px; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.6);';
         
-        // 加入專屬 Google 登入按鈕
         panel.innerHTML = `
             <div style="margin-bottom:12px;">
-                <button id="btn-force-login" style="width:100%; padding:8px; background:#db4437; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px;">🔴 點我強制 Google 登入</button>
+                <button id="btn-force-login" style="width:100%; padding:10px; background:#db4437; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🔴 點我強制 Google 登入</button>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <b style="color:#ffd23f;">🚀 8人連線通道</b>
-                <div><button id="btn-copy-room" class="btn" style="padding:4px 8px;">📋 複製房號</button></div>
+                <div><button id="btn-copy-room" class="btn" style="padding:4px 8px; color:black;">📋 複製</button></div>
             </div>
             <div style="display:flex; gap:6px; margin-bottom:8px;">
-                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號..." style="flex:1; padding:4px;">
-                <button id="btn-direct-join" class="btn gold" style="padding:4px 8px;">⚡ 加入房間</button>
+                <input id="inp-direct-room" class="field" type="text" placeholder="貼上房號..." style="flex:1; padding:4px; color:black;">
+                <button id="btn-direct-join" class="btn gold" style="padding:4px 8px; color:black;">⚡ 加入</button>
             </div>
-            <div id="public-room-list" style="max-height:120px; overflow-y:auto;">💡 提示：若已登入可無視上方紅按鈕。</div>
+            <div id="public-room-list" style="max-height:120px; overflow-y:auto; font-size:12px;">💡 提示：若已登入可無視上方紅按鈕。</div>
         `;
-        container.insertBefore(panel, container.firstChild);
+        document.body.appendChild(panel);
 
-        // 綁定登入功能
         document.getElementById('btn-force-login').onclick = () => {
             var provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(() => {
                 location.reload();
-            }).catch(err => {
-                alert("登入失敗：" + err.message);
-            });
+            }).catch(err => alert("登入失敗：" + err.message));
         };
 
-        // 綁定連線功能
         document.getElementById('btn-copy-room').onclick = async () => {
             const Social = getSocial();
             if (!Social) return alert('請先登入！');
